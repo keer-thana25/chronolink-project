@@ -49,84 +49,17 @@ import { GSAPService } from '../../services/gsap.service';
           <p class="text-gray-600 mb-8">Update your profile information and interests</p>
 
           <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
-            <!-- Bio Field -->
+            <!-- Username Field -->
             <div class="form-group">
-              <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-              <textarea
-                id="bio"
-                formControlName="bio"
-                rows="4"
+              <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+              <input
+                type="text"
+                id="username"
+                formControlName="username"
                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-chronolink-primary focus:border-transparent transition-all duration-200"
-                placeholder="Tell us about yourself..."></textarea>
-              <div *ngIf="profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched" class="text-red-500 text-sm mt-1">
-                Bio is required
-              </div>
-            </div>
-
-            <!-- Interests Field -->
-            <div class="form-group">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Interests</label>
-              <div class="space-y-2">
-                <div class="flex flex-wrap gap-2 mb-3">
-                  <span *ngFor="let interest of selectedInterests; let i = index"
-                        class="inline-flex items-center px-3 py-1 bg-chronolink-primary bg-opacity-10 text-chronolink-primary rounded-full text-sm">
-                    {{ interest }}
-                    <button type="button" (click)="removeInterest(i)" class="ml-2 text-chronolink-primary hover:text-red-500">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </span>
-                </div>
-                <div class="flex gap-2">
-                  <select
-                    #interestSelect
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-chronolink-primary focus:border-transparent transition-all duration-200">
-                    <option value="">Select an interest</option>
-                    <option value="Spirituality">Spirituality</option>
-                    <option value="Literature">Literature</option>
-                    <option value="Art">Art</option>
-                    <option value="Heritage">Heritage</option>
-                    <option value="Inspiration">Inspiration</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Music">Music</option>
-                    <option value="History">History</option>
-                  </select>
-                  <button
-                    type="button"
-                    (click)="addInterest(interestSelect.value)"
-                    class="px-4 py-3 bg-chronolink-primary text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                    Add
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Achievements Field -->
-            <div class="form-group">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Achievements</label>
-              <div class="space-y-2">
-                <div class="flex flex-wrap gap-2 mb-3">
-                  <span *ngFor="let achievement of selectedAchievements; let i = index"
-                        class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                    <i class="fas fa-trophy mr-1 text-yellow-600"></i>
-                    {{ achievement }}
-                    <button type="button" (click)="removeAchievement(i)" class="ml-2 text-yellow-600 hover:text-red-500">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </span>
-                </div>
-                <div class="flex gap-2">
-                  <input
-                    type="text"
-                    #achievementInput
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-chronolink-primary focus:border-transparent transition-all duration-200"
-                    placeholder="Enter an achievement">
-                  <button
-                    type="button"
-                    (click)="addAchievement(achievementInput.value)"
-                    class="px-4 py-3 bg-chronolink-primary text-white rounded-lg hover:bg-opacity-90 transition-colors duration-200">
-                    Add
-                  </button>
-                </div>
+                placeholder="Enter your username">
+              <div *ngIf="profileForm.get('username')?.invalid && profileForm.get('username')?.touched" class="text-red-500 text-sm mt-1">
+                Username is required (3-20 characters)
               </div>
             </div>
 
@@ -199,8 +132,7 @@ export class EditProfileComponent implements OnInit, OnDestroy {
   successMessage = '';
   errorMessage = '';
   currentUser: User | null = null;
-  selectedInterests: string[] = [];
-  selectedAchievements: string[] = [];
+
 
   private destroy$ = new Subject<void>();
 
@@ -229,41 +161,18 @@ export class EditProfileComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((user: any) => {
         this.currentUser = user;
-        if (user) {
-          this.selectedInterests = user.interests || [];
-          this.selectedAchievements = user.achievements || [];
-          this.profileForm.patchValue({
-            bio: user.bio || ''
-          });
-        }
+        // Since we simplified the user model, we don't need to load these fields
+        // The edit profile form will only allow updating username for now
       });
   }
 
   private createForm(): FormGroup {
     return this.fb.group({
-      bio: ['', [Validators.required]]
+      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]]
     });
   }
 
-  addInterest(interest: string): void {
-    if (interest && !this.selectedInterests.includes(interest)) {
-      this.selectedInterests.push(interest);
-    }
-  }
 
-  removeInterest(index: number): void {
-    this.selectedInterests.splice(index, 1);
-  }
-
-  addAchievement(achievement: string): void {
-    if (achievement.trim() && !this.selectedAchievements.includes(achievement.trim())) {
-      this.selectedAchievements.push(achievement.trim());
-    }
-  }
-
-  removeAchievement(index: number): void {
-    this.selectedAchievements.splice(index, 1);
-  }
 
   onSubmit(): void {
     if (this.profileForm.invalid) return;
@@ -273,12 +182,10 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     const profileData = {
-      bio: this.profileForm.value.bio,
-      interests: this.selectedInterests,
-      achievements: this.selectedAchievements
+      username: this.profileForm.value.username
     };
 
-    this.usersService.updateProfile(profileData)
+    this.authService.updateProfile(profileData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {

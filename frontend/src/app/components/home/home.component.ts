@@ -100,11 +100,11 @@ import { GSAPService } from '../../services/gsap.service';
                 <div class="flex items-center justify-between mb-4">
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-chronolink-primary rounded-full flex items-center justify-center">
-                      <span class="text-white text-sm font-medium">{{ getInitials(post.author.username) }}</span>
+                      <span class="text-white text-sm font-medium">{{ post.createdBy === 'system' ? 'CL' : getInitials(post.author?.username) }}</span>
                     </div>
                     <div>
-                      <p class="font-medium text-gray-900">{{ post.author.username }}</p>
-                      <p class="text-sm text-gray-500">{{ post.author.generation | titlecase }} Generation</p>
+                      <p class="font-medium text-gray-900">{{ post.createdBy === 'system' ? 'ChronoLink' : post.author?.username }}</p>
+                      <p class="text-sm text-gray-500">{{ post.createdBy === 'system' ? 'System' : 'Member' }}</p>
                     </div>
                   </div>
                   <div class="flex items-center space-x-2">
@@ -206,8 +206,22 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrentUser();
-    this.loadPosts();
+
+    // Check if user is authenticated before loading posts
+    if (this.authService.isAuthenticated()) {
+      this.loadPosts();
+    } else {
+      // Redirect to auth page if not authenticated
+      this.router.navigate(['/auth']);
+      return;
+    }
+
     this.animateEntry();
+
+    // Listen for new post creation
+    window.addEventListener('postCreated', () => {
+      this.loadPosts();
+    });
   }
 
   ngOnDestroy(): void {

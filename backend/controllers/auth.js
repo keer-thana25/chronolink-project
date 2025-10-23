@@ -9,11 +9,11 @@ const generateToken = (id) => {
 };
 
 // @desc    Register user
-// @route   POST /api/auth/register
+// @route   POST /api/auth/signup
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { username, password, generation, interests } = req.body;
+    const { username, password } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ username });
@@ -24,32 +24,29 @@ const register = async (req, res) => {
     // Create user
     const user = await User.create({
       username,
-      password,
-      generation,
-      interests: interests || []
+      password
     });
 
     const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
+      message: 'User registered successfully',
       token,
       user: {
         id: user._id,
         username: user.username,
-        role: user.role,
-        generation: user.generation,
-        interests: user.interests
+        generation: user.generation
       }
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error during registration' });
+    res.status(500).json({ message: 'Registration failed', error: error.message });
   }
 };
 
 // @desc    Login user
-// @route   POST /api/auth/login
+// @route   POST /api/auth/signin
 // @access  Public
 const login = async (req, res) => {
   try {
@@ -58,13 +55,13 @@ const login = async (req, res) => {
     // Check for user
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     // Check if password matches
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     const token = generateToken(user._id);
@@ -75,12 +72,7 @@ const login = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        role: user.role,
-        generation: user.generation,
-        interests: user.interests,
-        profilePicture: user.profilePicture,
-        bio: user.bio,
-        achievements: user.achievements
+        generation: user.generation
       }
     });
   } catch (error) {
@@ -94,13 +86,15 @@ const login = async (req, res) => {
 // @access  Private
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-      .populate('followers', 'username')
-      .populate('following', 'username');
+    const user = await User.findById(req.user.id);
 
     res.json({
       success: true,
-      user
+      user: {
+        id: user._id,
+        username: user.username,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
     console.error(error);
@@ -113,13 +107,19 @@ const getProfile = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const { bio, interests, profilePicture } = req.body;
-
     const user = await User.findById(req.user.id);
 
-    if (bio !== undefined) user.bio = bio;
-    if (interests !== undefined) user.interests = interests;
-    if (profilePicture !== undefined) user.profilePicture = profilePicture;
+    // For now, only allow updating username (password updates would need special handling)
+    const { username } = req.body;
+
+    if (username !== undefined) {
+      // Check if new username is already taken by another user
+      const existingUser = await User.findOne({ username });
+      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      user.username = username;
+    }
 
     await user.save();
 
@@ -128,10 +128,7 @@ const updateProfile = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        bio: user.bio,
-        interests: user.interests,
-        profilePicture: user.profilePicture,
-        achievements: user.achievements
+        createdAt: user.createdAt
       }
     });
   } catch (error) {

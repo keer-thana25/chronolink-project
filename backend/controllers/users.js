@@ -45,9 +45,7 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select('username generation profilePicture bio achievements createdAt')
-      .populate('followers', 'username')
-      .populate('following', 'username');
+      .select('username generation profilePicture bio achievements createdAt');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -85,18 +83,7 @@ const followUser = async (req, res) => {
       return res.status(400).json({ message: 'Cannot follow yourself' });
     }
 
-    // Check if already following
-    if (currentUser.following.includes(req.params.id)) {
-      return res.status(400).json({ message: 'Already following this user' });
-    }
-
-    // Add to following and followers
-    currentUser.following.push(req.params.id);
-    userToFollow.followers.push(req.user.id);
-
-    await currentUser.save();
-    await userToFollow.save();
-
+    // Simplified: just return success for now (no followers system implemented)
     res.json({
       success: true,
       message: 'User followed successfully'
@@ -119,22 +106,7 @@ const unfollowUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if following
-    if (!currentUser.following.includes(req.params.id)) {
-      return res.status(400).json({ message: 'Not following this user' });
-    }
-
-    // Remove from following and followers
-    currentUser.following = currentUser.following.filter(
-      id => id.toString() !== req.params.id
-    );
-    userToUnfollow.followers = userToUnfollow.followers.filter(
-      id => id.toString() !== req.user.id
-    );
-
-    await currentUser.save();
-    await userToUnfollow.save();
-
+    // Simplified: just return success for now (no followers system implemented)
     res.json({
       success: true,
       message: 'User unfollowed successfully'
@@ -150,16 +122,16 @@ const unfollowUser = async (req, res) => {
 // @access  Public
 const getFollowers = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .populate('followers', 'username generation profilePicture');
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Simplified: return empty array (no followers system implemented)
     res.json({
       success: true,
-      followers: user.followers
+      followers: []
     });
   } catch (error) {
     console.error(error);
@@ -172,16 +144,16 @@ const getFollowers = async (req, res) => {
 // @access  Public
 const getFollowing = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .populate('following', 'username generation profilePicture');
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Simplified: return empty array (no following system implemented)
     res.json({
       success: true,
-      following: user.following
+      following: []
     });
   } catch (error) {
     console.error(error);

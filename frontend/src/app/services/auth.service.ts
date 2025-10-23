@@ -7,14 +7,8 @@ import { environment } from '../../environments/environment';
 export interface User {
   id: string;
   username: string;
-  role: string;
   generation: string;
-  profilePicture?: string;
-  bio?: string;
-  interests: string[];
-  achievements: string[];
-  followers?: User[];
-  following?: User[];
+  createdAt?: string;
 }
 
 export interface LoginRequest {
@@ -25,8 +19,6 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
-  generation: string;
-  interests?: string[];
 }
 
 export interface AuthResponse {
@@ -54,19 +46,17 @@ export class AuthService {
   private loadCurrentUser(): void {
     const token = localStorage.getItem(this.tokenKey);
     if (token) {
-      // Decode token to get user info (simplified - in production, verify token with server)
+      // Simple token validation - in production, verify with server
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        this.getProfile().subscribe({
-          next: (response: any) => {
-            if (response.success) {
-              this.currentUserSubject.next(response.user);
-            }
-          },
-          error: () => {
-            this.logout();
-          }
-        });
+        // Basic token structure check (has 3 parts separated by dots)
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          // Just check if token exists and has valid structure
+          // Don't decode payload here as it should be verified server-side
+          this.currentUserSubject.next({} as User); // Will be populated by getProfile call
+        } else {
+          this.logout();
+        }
       } catch (error) {
         this.logout();
       }
@@ -74,7 +64,7 @@ export class AuthService {
   }
 
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/signup`, userData)
       .pipe(
         tap(response => {
           if (response.success) {
@@ -85,7 +75,7 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/signin`, credentials)
       .pipe(
         tap(response => {
           if (response.success) {

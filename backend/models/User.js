@@ -15,41 +15,10 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters long']
   },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
-  profilePicture: {
-    type: String,
-    default: ''
-  },
-  bio: {
-    type: String,
-    maxlength: [500, 'Bio cannot exceed 500 characters'],
-    default: ''
-  },
   generation: {
     type: String,
-    enum: ['older', 'younger'],
-    required: true
+    default: 'Unknown'
   },
-  interests: [{
-    type: String,
-    enum: ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration', 'Technology', 'Music', 'History']
-  }],
-  achievements: [{
-    type: String,
-    enum: ['Best Storyteller', 'Cultural Keeper', 'Wisdom Sharer', 'Bridge Builder', 'Inspiration Giver']
-  }],
-  followers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  following: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
   isActive: {
     type: Boolean,
     default: true

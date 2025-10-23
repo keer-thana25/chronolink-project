@@ -19,7 +19,7 @@ const getAllPosts = async (req, res) => {
     if (generation) query.generation = generation;
 
     const posts = await Post.find(query)
-      .populate('author', 'username generation profilePicture')
+      .populate('author', 'username')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -48,9 +48,9 @@ const getAllPosts = async (req, res) => {
 const getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate('author', 'username generation profilePicture bio')
+      .populate('author', 'username')
       .populate('likes.user', 'username')
-      .populate('comments.user', 'username profilePicture');
+      .populate('comments.user', 'username');
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
@@ -75,28 +75,53 @@ const getPostById = async (req, res) => {
 // @access  Private
 const createPost = async (req, res) => {
   try {
-    const { title, content, mediaType, mediaUrl, mediaBase64, category } = req.body;
+    const { title, content, category } = req.body;
+
+    // Handle uploaded file
+    let mediaUrl = '';
+    let imageUrl = '';
+    if (req.file) {
+      mediaUrl = `/uploads/${req.file.filename}`;
+      imageUrl = mediaUrl; // Set imageUrl for the model requirement
+    }
+
+    // Map frontend category to backend enum if needed
+    let mappedCategory = category;
+    if (category === 'Spiritual') mappedCategory = 'spiritual';
+    else if (category === 'Technology') mappedCategory = 'tech';
+    else if (category === 'blend') mappedCategory = 'blend';
+
+    // Set generation based on user profile (fallback to 'young')
+    const userGeneration = req.user?.generation || 'young';
+
+    // Map content to caption for the model
+    const caption = content || title || 'New post';
 
     const post = await Post.create({
-      title,
-      content,
-      mediaType: mediaType || 'text',
+      title: title || caption,
+      content: content || caption,
+      caption: caption, // Required field
+      imageUrl: imageUrl, // Required field
+      mediaType: req.file ? 'image' : 'text',
       mediaUrl,
-      mediaBase64,
-      category,
-      generation: req.user.generation,
-      author: req.user.id
+      category: mappedCategory,
+      generation: userGeneration,
+      author: req.user.id,
+      createdBy: req.user.username || 'user'
     });
 
-    await post.populate('author', 'username generation profilePicture');
+    await post.populate('author', 'username');
 
     res.status(201).json({
       success: true,
       post
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error creating post' });
+    console.error('Error creating post:', error);
+    res.status(500).json({
+      message: 'Server error creating post',
+      error: error.message
+    });
   }
 };
 
@@ -111,8 +136,8 @@ const updatePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Check if user owns the post or is admin
-    if (post.author.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Check if user owns the post
+    if (post.author.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to update this post' });
     }
 
@@ -124,12 +149,12 @@ const updatePost = async (req, res) => {
     if (mediaUrl !== undefined) post.mediaUrl = mediaUrl;
     if (mediaBase64 !== undefined) post.mediaBase64 = mediaBase64;
     if (category) post.category = category;
-    if (isFeatured !== undefined && req.user.role === 'admin') {
+    if (isFeatured !== undefined) {
       post.isFeatured = isFeatured;
     }
 
     await post.save();
-    await post.populate('author', 'username generation profilePicture');
+    await post.populate('author', 'username');
 
     res.json({
       success: true,
@@ -152,8 +177,8 @@ const deletePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Check if user owns the post or is admin
-    if (post.author.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Check if user owns the post
+    if (post.author.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
 
@@ -228,7 +253,7 @@ const addComment = async (req, res) => {
     });
 
     await post.save();
-    await post.populate('comments.user', 'username profilePicture');
+    await post.populate('comments.user', 'username');
 
     res.json({
       success: true,
@@ -245,17 +270,14 @@ const addComment = async (req, res) => {
 // @access  Private
 const getFeed = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    const following = user.following.map(f => f.toString());
+    // Simplified user model doesn't have following field
+    // For now, just return user's own posts
 
     const posts = await Post.find({
-      $or: [
-        { author: { $in: following } },
-        { author: req.user.id }
-      ],
+      author: req.user.id,
       isActive: true
     })
-      .populate('author', 'username generation profilePicture')
+      .populate('author', 'username')
       .sort({ createdAt: -1 })
       .limit(20);
 
@@ -275,7 +297,7 @@ const getFeed = async (req, res) => {
 const getFeaturedPosts = async (req, res) => {
   try {
     const posts = await Post.find({ isFeatured: true, isActive: true })
-      .populate('author', 'username generation profilePicture')
+      .populate('author', 'username')
       .sort({ createdAt: -1 })
       .limit(10);
 
@@ -289,39 +311,39 @@ const getFeaturedPosts = async (req, res) => {
   }
 };
 
-// @desc    Get generation connection posts (alternating older/younger)
+// @desc    Get generation connection posts (alternating young/old)
 // @route   GET /api/posts/generation-connection
 // @access  Public
 const getGenerationConnection = async (req, res) => {
   try {
-    const olderPosts = await Post.find({
-      generation: 'older',
+    // Get all posts including user posts (limit to 20 for better performance)
+    const allPosts = await Post.find({
       isActive: true
     })
-      .populate('author', 'username generation profilePicture')
+      .populate('author', 'username generation')
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(20);
 
-    const youngerPosts = await Post.find({
-      generation: 'younger',
-      isActive: true
-    })
-      .populate('author', 'username generation profilePicture')
-      .sort({ createdAt: -1 })
-      .limit(5);
+    // Separate posts by generation
+    const youngPosts = allPosts.filter(post => post.generation === 'young');
+    const oldPosts = allPosts.filter(post => post.generation === 'old');
+    const unknownPosts = allPosts.filter(post => post.generation === 'Unknown');
 
-    // Alternate between older and younger posts
-    const alternatingPosts = [];
-    const maxLength = Math.max(olderPosts.length, youngerPosts.length);
+    // Combine all posts, prioritizing user posts (Unknown generation)
+    const alternatingPosts = [...unknownPosts, ...youngPosts, ...oldPosts];
 
-    for (let i = 0; i < maxLength; i++) {
-      if (olderPosts[i]) alternatingPosts.push(olderPosts[i]);
-      if (youngerPosts[i]) alternatingPosts.push(youngerPosts[i]);
+    // If we have fewer than 10 posts, fill with more from available generations
+    if (alternatingPosts.length < 10) {
+      const remainingPosts = allPosts.filter(post =>
+        !alternatingPosts.some(p => p._id.toString() === post._id.toString())
+      ).slice(0, 10 - alternatingPosts.length);
+
+      alternatingPosts.push(...remainingPosts);
     }
 
     res.json({
       success: true,
-      posts: alternatingPosts
+      posts: alternatingPosts.slice(0, 10) // Limit to 10 posts for display
     });
   } catch (error) {
     console.error(error);
@@ -337,33 +359,125 @@ const getRecommendations = async (req, res) => {
     const userId = req.query.userId;
     let categories = [];
 
-    if (userId) {
-      const user = await User.findById(userId);
-      categories = user ? user.interests : [];
-    }
-
-    // If no user or no interests, recommend popular categories
-    if (categories.length === 0) {
-      categories = ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration'];
-    }
+    // For now, use popular categories since we simplified the user model
+    categories = ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration'];
 
     const posts = await Post.find({
       category: { $in: categories },
       isActive: true,
       ...(userId && { author: { $ne: userId } }) // Exclude user's own posts
     })
-      .populate('author', 'username generation profilePicture')
+      .populate('author', 'username')
       .sort({ likes: -1, createdAt: -1 })
       .limit(10);
 
     res.json({
       success: true,
       posts,
-      basedOn: userId ? 'user_interests' : 'popular_categories'
+      basedOn: 'popular_categories'
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error getting recommendations' });
+  }
+};
+
+// @desc    Seed demo posts for Connect page
+// @route   GET /api/posts/seed-visuals
+// @access  Public (dev only)
+const seedVisuals = async (req, res) => {
+  try {
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ message: 'Seeding not allowed in production' });
+    }
+
+    const force = req.query.force === 'true';
+
+    // Check if posts already exist
+    const existingPosts = await Post.countDocuments();
+    if (existingPosts > 0 && !force) {
+      return res.json({
+        success: true,
+        message: 'Posts already exist. Use ?force=true to reseed',
+        inserted: 0
+      });
+    }
+
+    // Clear existing posts if forcing
+    if (force) {
+      await Post.deleteMany({});
+    }
+
+    // Seed posts
+    const samplePosts = [
+      {
+        imageUrl: 'https://ibb.co/1G2hgZCN',
+        caption: 'Arjuna had Krishna. We have AI.',
+        category: 'blend',
+        generation: 'young',
+        createdBy: 'system',
+        username: 'system',
+        profilePicture: 'https://source.unsplash.com/100x100/?avatar&sig=1',
+        likes: [],
+        comments: []
+      },
+      {
+        imageUrl: 'https://source.unsplash.com/800x800/?meditation,temple&sig=2',
+        caption: 'From dharma to data — the evolution of wisdom.',
+        category: 'blend',
+        generation: 'old',
+        createdBy: 'system',
+        username: 'system',
+        profilePicture: 'https://source.unsplash.com/100x100/?avatar&sig=2',
+        likes: [],
+        comments: []
+      },
+      {
+        imageUrl: 'https://source.unsplash.com/800x800/?coding,meditation&sig=3',
+        caption: 'Karma in code — where Bhagavad Gita meets AI.',
+        category: 'blend',
+        generation: 'young',
+        createdBy: 'system',
+        username: 'system',
+        profilePicture: 'https://source.unsplash.com/100x100/?avatar&sig=3',
+        likes: [],
+        comments: []
+      },
+      {
+        imageUrl: 'https://source.unsplash.com/800x800/?wisdom,future&sig=4',
+        caption: 'Past wisdom, future vision.',
+        category: 'blend',
+        generation: 'old',
+        createdBy: 'system',
+        username: 'system',
+        profilePicture: 'https://source.unsplash.com/100x100/?avatar&sig=4',
+        likes: [],
+        comments: []
+      },
+      {
+        imageUrl: 'https://source.unsplash.com/800x800/?smartphone,ancient&sig=5',
+        caption: 'Bridging time, one swipe at a time.',
+        category: 'blend',
+        generation: 'young',
+        createdBy: 'system',
+        username: 'system',
+        profilePicture: 'https://source.unsplash.com/100x100/?avatar&sig=5',
+        likes: [],
+        comments: []
+      }
+    ];
+
+    const posts = await Post.insertMany(samplePosts);
+
+    res.json({
+      success: true,
+      message: 'Demo visuals added',
+      inserted: posts.length
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error seeding posts' });
   }
 };
 
@@ -378,5 +492,6 @@ module.exports = {
   getFeed,
   getFeaturedPosts,
   getGenerationConnection,
-  getRecommendations
+  getRecommendations,
+  seedVisuals
 };

@@ -4,8 +4,8 @@ const { register, login, getProfile, updateProfile } = require('../controllers/a
 const { protect } = require('../middleware/auth');
 
 // Public routes
-router.post('/register', register);
-router.post('/login', login);
+router.post('/signup', register);
+router.post('/signin', login);
 
 // Protected routes
 router.get('/profile', protect, getProfile);

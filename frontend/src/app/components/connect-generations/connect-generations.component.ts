@@ -10,9 +10,9 @@ import { GSAPService } from '../../services/gsap.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="connect-container min-h-screen bg-gradient-to-br from-older-generation-50 via-white to-younger-generation-50">
+    <div class="connect-container min-h-screen bg-gray-50 relative overflow-hidden">
       <!-- Header -->
-      <header class="bg-white shadow-sm">
+      <header class="bg-white shadow-sm relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center h-16">
             <div class="flex items-center">
@@ -40,156 +40,108 @@ import { GSAPService } from '../../services/gsap.service';
         </div>
       </header>
 
-      <!-- Page Header -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold text-chronolink-primary mb-4 font-display">Connecting the Generations</h1>
-          <p class="text-xl text-gray-600">Bridging the gap between older and younger generations through shared stories</p>
-        </div>
-      </div>
-
       <!-- Main Content -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Animation Trigger Area -->
-        <div class="animation-area mb-8">
-          <div class="flex justify-center items-center space-x-8">
-            <!-- Older Generation Side -->
-            <div class="older-side text-center">
-              <div class="w-16 h-16 bg-older-generation-200 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <i class="fas fa-user text-2xl text-older-generation-700"></i>
-              </div>
-              <h3 class="text-lg font-semibold text-older-generation-800">Older Generation</h3>
-              <p class="text-sm text-older-generation-600">Wisdom & Experience</p>
-            </div>
+      <div class="flex items-center justify-center min-h-screen px-4 relative">
+        <!-- Navigation Arrows -->
+        <button (click)="previousPost()" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200">
+          <i class="fas fa-chevron-left text-2xl text-gray-600"></i>
+        </button>
 
-            <!-- Animated Arrows -->
-            <div class="arrows-container flex items-center space-x-4">
-              <div class="arrow-left">
-                <i class="fas fa-arrow-left text-2xl text-chronolink-primary"></i>
-              </div>
-              <div class="meeting-point w-4 h-4 bg-chronolink-secondary rounded-full"></div>
-              <div class="arrow-right">
-                <i class="fas fa-arrow-right text-2xl text-chronolink-primary"></i>
-              </div>
-            </div>
+        <button (click)="nextPost()" class="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200">
+          <i class="fas fa-chevron-right text-2xl text-gray-600"></i>
+        </button>
 
-            <!-- Younger Generation Side -->
-            <div class="younger-side text-center">
-              <div class="w-16 h-16 bg-younger-generation-200 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <i class="fas fa-user text-2xl text-younger-generation-700"></i>
-              </div>
-              <h3 class="text-lg font-semibold text-younger-generation-800">Younger Generation</h3>
-              <p class="text-sm text-younger-generation-600">Innovation & Energy</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Flashcards Container -->
-        <div class="flashcards-container relative">
+        <!-- Post Card -->
+        <div class="post-card-container relative w-full max-w-md mx-auto">
           <div *ngIf="posts.length === 0 && !isLoading" class="text-center py-12">
-            <i class="fas fa-sync-alt text-6xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500 text-lg">Loading generation connection stories...</p>
+            <div class="animate-pulse">
+              <div class="w-full h-96 bg-gray-200 rounded-2xl mb-4"></div>
+              <div class="w-3/4 h-4 bg-gray-200 rounded mx-auto mb-2"></div>
+              <div class="w-1/2 h-4 bg-gray-200 rounded mx-auto"></div>
+            </div>
+            <p class="text-gray-500 text-lg mt-4">Loading generation connection stories...</p>
           </div>
 
-          <div class="flashcards-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div *ngFor="let post of posts; trackBy: trackByPostId"
-                 class="flashcard bg-white rounded-lg shadow-lg p-6 cursor-pointer"
-                 [class.older-generation-theme]="post.generation === 'older'"
-                 [class.younger-generation-theme]="post.generation === 'younger'"
-                 (click)="flipCard($event)">
-              <div class="flashcard-inner relative w-full h-64">
-                <!-- Front of card -->
-                <div class="flashcard-front absolute inset-0 w-full h-full backface-hidden bg-white rounded-lg p-6 flex flex-col justify-center items-center text-center">
-                  <div class="mb-4">
-                    <div class="w-12 h-12 bg-chronolink-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span class="text-white text-sm font-medium">{{ getInitials(post.author.username) }}</span>
-                    </div>
-                    <h3 class="font-semibold text-gray-900">{{ post.author.username }}</h3>
-                    <p class="text-sm text-gray-600">{{ post.author.generation | titlecase }} Generation</p>
-                  </div>
-                  <div class="flex-1 flex items-center justify-center">
-                    <p class="text-gray-700 font-medium">{{ post.title }}</p>
-                  </div>
-                  <div class="mt-4">
-                    <span class="px-3 py-1 rounded-full text-xs font-medium"
-                          [class.bg-older-generation-100]="post.generation === 'older'"
-                          [class.text-older-generation-800]="post.generation === 'older'"
-                          [class.bg-younger-generation-100]="post.generation === 'younger'"
-                          [class.text-younger-generation-800]="post.generation === 'younger'">
-                      {{ post.category }}
-                    </span>
-                  </div>
+          <div *ngIf="currentPost" class="post-card bg-white rounded-2xl shadow-2xl overflow-hidden"
+               (touchstart)="onTouchStart($event)"
+               (touchmove)="onTouchMove($event)"
+               (touchend)="onTouchEnd($event)">
+            <!-- Post Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-chronolink-primary rounded-full flex items-center justify-center">
+                  <span class="text-white text-sm font-medium">{{ currentPost.createdBy === 'system' ? 'CL' : getInitials(currentPost.author?.username) }}</span>
                 </div>
+                <div>
+                  <p class="font-semibold text-gray-900">{{ currentPost.createdBy === 'system' ? 'ChronoLink' : currentPost.author?.username }}</p>
+                  <p class="text-xs text-gray-500">{{ currentPost.createdBy === 'system' ? 'System' : 'Member' }}</p>
+                </div>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-ellipsis-h"></i>
+              </button>
+            </div>
 
-                <!-- Back of card -->
-                <div class="flashcard-back absolute inset-0 w-full h-full backface-hidden bg-gray-50 rounded-lg p-6 flex flex-col justify-center items-center text-center transform rotate-y-180">
-                  <div class="flex-1 flex items-center justify-center">
-                    <p class="text-gray-700 leading-relaxed">{{ post.content | slice:0:200 }}{{ post.content.length > 200 ? '...' : '' }}</p>
-                  </div>
-                  <div class="mt-4 text-sm text-gray-500">
-                    Click to flip back
-                  </div>
+            <!-- Post Image -->
+            <div class="relative">
+              <img [src]="currentPost.imageUrl || currentPost.mediaUrl" [alt]="currentPost.caption" class="w-full h-96 object-cover"
+                   loading="lazy" (error)="onImageError($event, currentPost.generation)">
+              <div class="absolute top-4 right-4">
+                <span class="px-2 py-1 bg-black bg-opacity-50 text-white rounded-full text-xs font-medium">
+                  {{ currentPost.generation === 'young' ? 'Young' : currentPost.generation === 'old' ? 'Old' : 'User' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Post Actions -->
+            <div class="p-4 border-b border-gray-100">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-4">
+                  <button (click)="likePost()" class="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors duration-200">
+                    <i class="far fa-heart text-2xl"></i>
+                  </button>
+                  <button (click)="commentPost()" class="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                    <i class="far fa-comment text-2xl"></i>
+                  </button>
+                  <button (click)="sharePost()" class="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors duration-200">
+                    <i class="fas fa-share text-2xl"></i>
+                  </button>
+                </div>
+                <div class="text-sm text-gray-500">
+                  {{ currentPost.likeCount || 0 }} likes • {{ currentPost.commentCount || 0 }} comments
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Load More Button -->
-        <div *ngIf="posts.length > 0" class="text-center mt-8">
-          <button class="btn-primary">Load More Stories</button>
+            <!-- Post Caption -->
+            <div class="p-4">
+              <p class="text-gray-900 leading-relaxed">
+                <span class="font-semibold">{{ currentPost.createdBy === 'system' ? 'ChronoLink' : currentPost.author?.username }}</span>
+                {{ currentPost.caption }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Post Counter -->
+          <div *ngIf="posts.length > 0" class="text-center mt-4">
+            <span class="text-gray-500">{{ currentIndex + 1 }} / {{ posts.length }}</span>
+          </div>
         </div>
       </div>
     </div>
   `,
   styles: [`
     .connect-container {
-      background: linear-gradient(135deg, #fdf8f6 0%, #ffffff 50%, #f0f9ff 100%);
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     }
 
-    .older-generation-theme {
-      background: linear-gradient(135deg, #fdf8f6 0%, #fce7e0 100%);
-      border: 2px solid #d85c3f;
+    .post-card {
+      transition: all 0.3s ease;
     }
 
-    .younger-generation-theme {
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      border: 2px solid #0ea5e9;
-    }
-
-    .flashcard {
-      perspective: 1000px;
-      min-height: 300px;
-    }
-
-    .flashcard-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-    }
-
-    .flashcard.flipped .flashcard-inner {
-      transform: rotateY(180deg);
-    }
-
-    .backface-hidden {
-      backface-visibility: hidden;
-    }
-
-    .rotate-y-180 {
-      transform: rotateY(180deg);
-    }
-
-    .arrows-container {
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
     .font-display {
@@ -199,10 +151,14 @@ import { GSAPService } from '../../services/gsap.service';
 })
 export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterViewInit {
   posts: Post[] = [];
+  currentPost: Post | null = null;
+  currentIndex = 0;
   isLoading = false;
   currentUser: any = { username: 'Guest' };
 
   private destroy$ = new Subject<void>();
+  private touchStartX = 0;
+  private touchStartY = 0;
 
   constructor(
     private postsService: PostsService,
@@ -232,6 +188,7 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
           this.isLoading = false;
           if (response.success) {
             this.posts = response.posts;
+            this.currentPost = this.posts[0] || null;
           }
         },
         error: (error: any) => {
@@ -241,21 +198,107 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
       });
   }
 
-  flipCard(event: Event): void {
-    const card = (event.target as Element).closest('.flashcard');
+  flipCard(): void {
+    const card = document.querySelector('.post-card');
     if (card) {
       card.classList.toggle('flipped');
 
       // Add flip animation
-      const flashcardInner = card.querySelector('.flashcard-inner');
-      if (flashcardInner) {
-        this.gsapService.animate(flashcardInner, {
+      const cardInner = card.querySelector('.post-card-inner');
+      if (cardInner) {
+        this.gsapService.animate(cardInner, {
           duration: 0.6,
           rotationY: card.classList.contains('flipped') ? 180 : 0,
           ease: 'power2.inOut'
         });
       }
     }
+  }
+
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  onTouchMove(event: TouchEvent): void {
+    if (!this.touchStartX || !this.touchStartY) return;
+
+    const currentX = event.touches[0].clientX;
+    const currentY = event.touches[0].clientY;
+    const diffX = this.touchStartX - currentX;
+    const diffY = this.touchStartY - currentY;
+
+    // If horizontal swipe is greater than vertical, prevent default
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      event.preventDefault();
+    }
+  }
+
+  onTouchEnd(event: TouchEvent): void {
+    if (!this.touchStartX || !this.touchStartY) return;
+
+    const currentX = event.changedTouches[0].clientX;
+    const diffX = this.touchStartX - currentX;
+
+    // Swipe threshold
+    const threshold = 50;
+
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        // Swipe left - next post
+        this.nextPost();
+      } else {
+        // Swipe right - previous post
+        this.previousPost();
+      }
+    }
+
+    this.touchStartX = 0;
+    this.touchStartY = 0;
+  }
+
+  nextPost(): void {
+    this.currentIndex = (this.currentIndex + 1) % this.posts.length;
+    this.currentPost = this.posts[this.currentIndex];
+    this.animateCardSlide('left');
+  }
+
+  previousPost(): void {
+    this.currentIndex = (this.currentIndex - 1 + this.posts.length) % this.posts.length;
+    this.currentPost = this.posts[this.currentIndex];
+    this.animateCardSlide('right');
+  }
+
+  likePost(): void {
+    if (this.currentPost) {
+      this.postsService.likePost(this.currentPost.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            if (response.success) {
+              this.currentPost!.likeCount = response.likes;
+              // Update the post in the posts array as well
+              const postIndex = this.posts.findIndex(p => p.id === this.currentPost!.id);
+              if (postIndex !== -1) {
+                this.posts[postIndex].likeCount = response.likes;
+              }
+            }
+          },
+          error: (error: any) => {
+            console.error('Error liking post:', error);
+          }
+        });
+    }
+  }
+
+  commentPost(): void {
+    // For now, just log - in real app, open comment modal
+    console.log('Comment on post:', this.currentPost?.id);
+  }
+
+  sharePost(): void {
+    // For now, just log - in real app, open share modal
+    console.log('Share post:', this.currentPost?.id);
   }
 
   getInitials(username: string | undefined): string {
@@ -284,21 +327,6 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
       ease: 'power2.out'
     });
 
-    // Animate generation sides
-    this.gsapService.animateFrom('.older-side', {
-      duration: 0.8,
-      x: -100,
-      opacity: 0,
-      ease: 'power2.out'
-    });
-
-    this.gsapService.animateFrom('.younger-side', {
-      duration: 0.8,
-      x: 100,
-      opacity: 0,
-      ease: 'power2.out'
-    });
-
     // Animate arrows
     this.gsapService.animateFrom('.arrows-container', {
       duration: 1,
@@ -308,32 +336,54 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
       ease: 'back.out(1.7)'
     });
 
-    // Animate flashcards
-    this.gsapService.staggerAnimation('.flashcard', {
-      duration: 0.6,
-      y: 50,
+    // Animate post card
+    this.gsapService.animateFrom('.post-card', {
+      duration: 0.8,
+      scale: 0.8,
       opacity: 0,
       delay: 1,
-      stagger: 0.1,
-      ease: 'power2.out'
+      ease: 'back.out(1.7)'
     });
   }
 
-  @HostListener('window:scroll', ['$event'])
-  onScroll(): void {
-    // Animate flashcards on scroll
-    const flashcards = document.querySelectorAll('.flashcard');
-    flashcards.forEach((card, index) => {
-      const rect = card.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.8) {
-        this.gsapService.animate(card, {
-          duration: 0.6,
-          y: 0,
-          opacity: 1,
-          delay: index * 0.1,
-          ease: 'power2.out'
-        });
-      }
-    });
+  private animateCardSlide(direction: 'left' | 'right'): void {
+    const card = document.querySelector('.post-card');
+    if (card) {
+      this.gsapService.animate(card, {
+        duration: 0.3,
+        x: direction === 'left' ? -50 : 50,
+        opacity: 0,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          this.gsapService.animate(card, {
+            duration: 0.3,
+            x: 0,
+            opacity: 1,
+            ease: 'power2.out'
+          });
+        }
+      });
+    }
+  }
+
+  onImageError(event: Event, generation: string): void {
+    const target = event.target as HTMLImageElement;
+    // Fallback to a placeholder image based on generation
+    if (generation === 'young') {
+      target.src = 'https://via.placeholder.com/800x800/ff6b9d/ffffff?text=🚀';
+    } else {
+      target.src = 'https://via.placeholder.com/800x800/4e54c8/ffffff?text=🧘';
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if (this.posts.length === 0) return;
+
+    if (event.key === 'ArrowLeft') {
+      this.previousPost();
+    } else if (event.key === 'ArrowRight') {
+      this.nextPost();
+    }
   }
 }

@@ -79,7 +79,8 @@ const seedData = async () => {
         category: 'Literature',
         generation: 'older',
         author: createdUsers.find(u => u.username === 'grandpa_john')._id,
-        mediaType: 'text'
+        mediaType: 'image',
+        mediaUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=center'
       },
       {
         title: 'Lessons from the Great Depression',
@@ -95,7 +96,8 @@ const seedData = async () => {
         category: 'Heritage',
         generation: 'older',
         author: createdUsers.find(u => u.username === 'grandpa_john')._id,
-        mediaType: 'text'
+        mediaType: 'image',
+        mediaUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop&crop=center'
       },
       {
         title: 'The Power of Patience in a Fast World',
@@ -121,7 +123,8 @@ const seedData = async () => {
         category: 'Art',
         generation: 'younger',
         author: createdUsers.find(u => u.username === 'creative_alex')._id,
-        mediaType: 'text'
+        mediaType: 'image',
+        mediaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop&crop=center'
       },
       {
         title: 'Why History Matters More Than Ever',
@@ -129,7 +132,8 @@ const seedData = async () => {
         category: 'History',
         generation: 'younger',
         author: createdUsers.find(u => u.username === 'young_maya')._id,
-        mediaType: 'text'
+        mediaType: 'image',
+        mediaUrl: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop&crop=center'
       },
       {
         title: 'The Future of Sustainable Living',

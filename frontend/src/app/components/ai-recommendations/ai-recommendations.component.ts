@@ -63,7 +63,7 @@ import { GSAPService } from '../../services/gsap.service';
               </div>
               <div>
                 <h3 class="text-lg font-semibold">Smart Recommendations</h3>
-                <p class="text-blue-100">Based on {{ currentUser?.interests?.join(', ') || 'your interests' }}</p>
+                <p class="text-blue-100">Based on your preferences</p>
               </div>
             </div>
             <div class="text-right">
@@ -101,7 +101,7 @@ import { GSAPService } from '../../services/gsap.service';
               <div class="post-media h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                 <div class="text-center">
                   <div class="w-16 h-16 bg-chronolink-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span class="text-white text-xl font-medium">{{ getInitials(post.author.username) }}</span>
+                    <span class="text-white text-xl font-medium">{{ post.createdBy === 'system' ? 'CL' : getInitials(post.author?.username) }}</span>
                   </div>
                   <div class="text-2xl">
                     <i class="fas fa-{{ getCategoryIcon(post.category) }} text-chronolink-primary"></i>
@@ -116,7 +116,7 @@ import { GSAPService } from '../../services/gsap.service';
                     {{ post.category }}
                   </span>
                   <span class="text-xs text-gray-500">
-                    {{ post.author.generation | titlecase }} Generation
+                    Member
                   </span>
                 </div>
 
@@ -126,9 +126,9 @@ import { GSAPService } from '../../services/gsap.service';
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">
                     <div class="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span class="text-xs font-medium text-gray-700">{{ getInitials(post.author.username) }}</span>
+                      <span class="text-xs font-medium text-gray-700">{{ post.createdBy === 'system' ? 'CL' : getInitials(post.author?.username) }}</span>
                     </div>
-                    <span class="text-sm text-gray-700">{{ post.author.username }}</span>
+                    <span class="text-sm text-gray-700">{{ post.createdBy === 'system' ? 'ChronoLink' : post.author?.username }}</span>
                   </div>
                   <div class="flex items-center space-x-3 text-sm text-gray-500">
                     <span class="flex items-center space-x-1">

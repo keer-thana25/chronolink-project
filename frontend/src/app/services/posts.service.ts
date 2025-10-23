@@ -6,14 +6,17 @@ import { AuthService } from './auth.service';
 
 export interface Post {
   id: string;
-  title: string;
-  content: string;
+  imageUrl: string;
+  caption: string;
+  category: 'spiritual' | 'tech' | 'blend';
+  createdBy: string;
+  title?: string;
+  content?: string;
   mediaType: 'text' | 'image' | 'video';
   mediaUrl?: string;
   mediaBase64?: string;
-  category: string;
-  generation: string;
-  author: {
+  generation: 'young' | 'old';
+  author?: {
     id: string;
     username: string;
     generation: string;
@@ -93,8 +96,17 @@ export class PostsService {
     return this.http.get<{ success: boolean; post: Post }>(`${this.apiUrl}/posts/${id}`);
   }
 
-  createPost(postData: CreatePostRequest): Observable<{ success: boolean; post: Post }> {
-    return this.http.post<{ success: boolean; post: Post }>(`${this.apiUrl}/posts`, postData);
+  createPost(postData: CreatePostRequest, imageFile?: File): Observable<{ success: boolean; post: Post }> {
+    const formData = new FormData();
+    formData.append('title', postData.title);
+    formData.append('content', postData.content);
+    formData.append('category', postData.category);
+
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    return this.http.post<{ success: boolean; post: Post }>(`${this.apiUrl}/posts`, formData);
   }
 
   updatePost(id: string, postData: Partial<CreatePostRequest>): Observable<{ success: boolean; post: Post }> {

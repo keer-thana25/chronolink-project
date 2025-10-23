@@ -71,31 +71,7 @@ import { GSAPService } from '../../services/gsap.service';
             </div>
           </div>
 
-          <!-- Generation Field (Sign Up Only) -->
-          <div *ngIf="!isLoginMode" class="form-group">
-            <label class="block text-sm font-medium text-gray-700 mb-2">I am part of the...</label>
-            <div class="flex space-x-4">
-              <label class="flex items-center">
-                <input
-                  type="radio"
-                  formControlName="generation"
-                  value="older"
-                  class="mr-2 text-chronolink-primary focus:ring-chronolink-primary">
-                <span class="text-sm">Older Generation</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  type="radio"
-                  formControlName="generation"
-                  value="younger"
-                  class="mr-2 text-chronolink-primary focus:ring-chronolink-primary">
-                <span class="text-sm">Younger Generation</span>
-              </label>
-            </div>
-            <div *ngIf="authForm.get('generation')?.invalid && authForm.get('generation')?.touched" class="text-red-500 text-sm mt-1">
-              Please select your generation
-            </div>
-          </div>
+
 
           <!-- Submit Button -->
           <button
@@ -115,12 +91,7 @@ import { GSAPService } from '../../services/gsap.service';
           {{ errorMessage }}
         </div>
 
-        <!-- Demo Accounts Info -->
-        <div class="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-          <p class="font-medium mb-2">Demo Accounts:</p>
-          <p><strong>Older:</strong> grandpa_john / password123</p>
-          <p><strong>Younger:</strong> young_maya / password123</p>
-        </div>
+
       </div>
     </div>
   `,
@@ -196,8 +167,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   private createForm(): FormGroup {
     return this.fb.group({
       username: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      generation: ['older', [Validators.required]]
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 

@@ -75,7 +75,7 @@ import { GSAPService } from '../../services/gsap.service';
                   <span class="text-white text-4xl font-medium">{{ getInitials(currentUser?.username) }}</span>
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900">{{ currentUser?.username }}</h2>
-                <p class="text-gray-600">{{ currentUser?.generation | titlecase }} Generation</p>
+                <p class="text-gray-600">Member since {{ formatDate(currentUser?.createdAt || '') }}</p>
               </div>
 
               <!-- Stats -->
@@ -94,33 +94,6 @@ import { GSAPService } from '../../services/gsap.service';
                 </div>
               </div>
 
-              <!-- Bio -->
-              <div class="bio-container mb-6">
-                <p class="text-gray-700">{{ currentUser?.bio || 'No bio added yet.' }}</p>
-              </div>
-
-              <!-- Interests -->
-              <div class="interests-container mb-6" *ngIf="(currentUser?.interests?.length || 0) > 0">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Interests</h3>
-                <div class="flex flex-wrap gap-2 justify-center">
-                  <span *ngFor="let interest of currentUser?.interests || []"
-                        class="px-3 py-1 bg-chronolink-primary bg-opacity-10 text-chronolink-primary rounded-full text-sm">
-                    {{ interest }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Achievements -->
-              <div class="achievements-container" *ngIf="(currentUser?.achievements?.length || 0) > 0">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Achievements</h3>
-                <div class="flex flex-wrap gap-2 justify-center">
-                  <span *ngFor="let achievement of currentUser?.achievements || []"
-                        class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm flex items-center">
-                    <i class="fas fa-trophy mr-1 text-yellow-600"></i>
-                    {{ achievement }}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -135,28 +108,42 @@ import { GSAPService } from '../../services/gsap.service';
                 <button class="btn-primary mt-4">Create Post</button>
               </div>
 
-              <div class="posts-grid grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="posts-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div *ngFor="let post of userPosts; trackBy: trackByPostId"
-                     class="post-card bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
-                  <h4 class="font-semibold text-gray-900 mb-2">{{ post.title }}</h4>
-                  <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ post.content }}</p>
-                  <div class="flex items-center justify-between text-xs text-gray-500">
-                    <span class="px-2 py-1 bg-white rounded">{{ post.category }}</span>
-                    <span>{{ formatDate(post.createdAt) }}</span>
+                     class="post-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
+                  <!-- Post Image -->
+                  <div class="relative">
+                    <img [src]="post.imageUrl || post.mediaUrl" [alt]="post.caption"
+                         class="w-full h-48 object-cover" (error)="onImageError($event)">
+                    <div class="absolute top-2 right-2">
+                      <span class="px-2 py-1 bg-black bg-opacity-50 text-white rounded-full text-xs font-medium">
+                        {{ post.generation === 'young' ? 'Young' : post.generation === 'old' ? 'Old' : 'User' }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
-                    <span class="flex items-center space-x-1">
-                      <i class="far fa-heart"></i>
-                      <span>{{ post.likeCount || 0 }}</span>
-                    </span>
-                    <span class="flex items-center space-x-1">
-                      <i class="far fa-comment"></i>
-                      <span>{{ post.commentCount || 0 }}</span>
-                    </span>
-                    <span class="flex items-center space-x-1">
-                      <i class="far fa-eye"></i>
-                      <span>{{ post.views || 0 }}</span>
-                    </span>
+
+                  <!-- Post Content -->
+                  <div class="p-4">
+                    <h4 class="font-semibold text-gray-900 mb-2">{{ post.title || post.caption }}</h4>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ post.content || post.caption }}</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                      <span class="px-2 py-1 bg-gray-100 rounded">{{ post.category }}</span>
+                      <span>{{ formatDate(post.createdAt) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+                      <button (click)="likePost(post)" class="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors duration-200">
+                        <i class="far fa-heart"></i>
+                        <span>{{ post.likeCount || 0 }}</span>
+                      </button>
+                      <span class="flex items-center space-x-1">
+                        <i class="far fa-comment"></i>
+                        <span>{{ post.commentCount || 0 }}</span>
+                      </span>
+                      <span class="flex items-center space-x-1">
+                        <i class="far fa-eye"></i>
+                        <span>{{ post.views || 0 }}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -242,14 +229,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!this.currentUser?.id) return;
 
     this.isLoading = true;
-    this.postsService.getAllPosts({ page: 1, limit: 20 })
+    this.postsService.getFeed()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
           this.isLoading = false;
           if (response.success) {
-            // Filter posts by current user (in real app, this would be done by the API)
-            this.userPosts = response.posts.filter((post: Post) => post.author.id === this.currentUser?.id);
+            this.userPosts = response.posts;
           }
         },
         error: (error: any) => {
@@ -262,21 +248,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private loadUserStats(): void {
     if (!this.currentUser?.id) return;
 
-    // Get followers/following count
-    this.usersService.getUserById(this.currentUser.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          if (response.success) {
-            this.userStats.followers = response.user.followers?.length || 0;
-            this.userStats.following = response.user.following?.length || 0;
-            this.userStats.posts = response.user.postCount || 0;
-          }
-        },
-        error: (error: any) => {
-          console.error('Error loading user stats:', error);
-        }
-      });
+    // Count user's posts from the loaded posts
+    this.userStats.posts = this.userPosts.length;
+    this.userStats.followers = 0; // Simplified - no followers system yet
+    this.userStats.following = 0; // Simplified - no following system yet
   }
 
   getInitials(username: string | undefined): string {
@@ -308,6 +283,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   editProfile(): void {
     this.router.navigate(['/edit-profile']);
+  }
+
+  likePost(post: Post): void {
+    this.postsService.likePost(post.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            // Update the post in the userPosts array
+            const postIndex = this.userPosts.findIndex(p => p.id === post.id);
+            if (postIndex !== -1) {
+              this.userPosts[postIndex].likeCount = response.likes;
+            }
+          }
+        },
+        error: (error: any) => {
+          console.error('Error liking post:', error);
+        }
+      });
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    // Fallback to a placeholder image
+    target.src = 'https://via.placeholder.com/400x300/e5e7eb/6b7280?text=No+Image';
   }
 
   private animateEntry(): void {

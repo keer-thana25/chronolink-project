@@ -1,20 +1,36 @@
 const mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema({
+  imageUrl: {
+    type: String,
+    required: true
+  },
+  caption: {
+    type: String,
+    required: true,
+    maxlength: [200, 'Caption cannot exceed 200 characters']
+  },
+  category: {
+    type: String,
+    enum: ['spiritual', 'tech', 'blend'],
+    required: true
+  },
+  createdBy: {
+    type: String,
+    default: 'system'
+  },
   title: {
     type: String,
-    required: [true, 'Title is required'],
     maxlength: [100, 'Title cannot exceed 100 characters']
   },
   content: {
     type: String,
-    required: [true, 'Content is required'],
     maxlength: [2000, 'Content cannot exceed 2000 characters']
   },
   mediaType: {
     type: String,
     enum: ['text', 'image', 'video'],
-    default: 'text'
+    default: 'image'
   },
   mediaUrl: {
     type: String,
@@ -24,20 +40,22 @@ const postSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  category: {
-    type: String,
-    enum: ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration', 'Technology', 'Music', 'History'],
-    required: true
-  },
   generation: {
     type: String,
-    enum: ['older', 'younger'],
-    required: true
+    enum: ['young', 'old', 'Unknown'],
+    default: 'young'
   },
   author: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
+  },
+  username: {
+    type: String,
+    default: 'system'
+  },
+  profilePicture: {
+    type: String,
+    default: 'https://source.unsplash.com/100x100/?avatar'
   },
   likes: [{
     user: {
