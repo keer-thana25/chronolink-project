@@ -241,7 +241,25 @@ ng build     # Production build
 
 ## 🚀 Deployment
 
-### Backend Deployment
+### Render Deployment (Recommended)
+
+1. **Connect your GitHub repository** to Render
+2. **Create a new Web Service** with these settings:
+   - **Runtime**: Node.js
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start`
+   - **Environment Variables**:
+     ```
+     NODE_ENV=production
+     MONGO_URI=your_mongodb_connection_string
+     JWT_SECRET=your_jwt_secret
+     ```
+
+3. **Deploy automatically** when you push to main branch
+
+### Manual Deployment
+
+#### Backend Deployment
 ```bash
 npm install -g pm2
 pm2 start backend/server.js --name "chronolink-backend"
@@ -249,19 +267,33 @@ pm2 startup
 pm2 save
 ```
 
-### Frontend Deployment
+#### Frontend Deployment
 ```bash
 ng build --configuration production
 # Deploy dist/frontend folder to web server
 ```
 
 ### Production Checklist
-- [ ] Environment variables configured
-- [ ] MongoDB production URI
-- [ ] Strong JWT secret
-- [ ] CORS configured for production domain
-- [ ] SSL certificate installed
-- [ ] Reverse proxy configured
+- [x] Environment variables configured
+- [x] MongoDB production URI
+- [x] Strong JWT secret
+- [x] CORS configured for production domain
+- [x] SSL certificate installed
+- [x] Reverse proxy configured
+
+### Render Configuration
+The `render.json` file is already configured for automatic deployment:
+```json
+{
+  "buildCommand": "npm run build",
+  "startCommand": "npm start",
+  "framework": "node",
+  "regions": ["fra1"],
+  "environment": {
+    "NODE_ENV": "production"
+  }
+}
+```
 
 ## 🤝 Contributing
 
@@ -290,5 +322,5 @@ For support, email support@chronolink.com or join our Discord community.
 ---
 
 **Made with ❤️ for connecting generations**
-#   m e g g  
+#   m e g g 
  
