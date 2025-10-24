@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "startCommand": "npm start",
+  "devCommand": "npm run dev",
+  "installCommand": "npm run install-all",
+  "framework": "node",
+  "regions": ["fra1"],
+  "environment": {
+    "NODE_ENV": "production",
+    "NPM_CONFIG_PRODUCTION": "false"
+  }
+}

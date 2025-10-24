@@ -1,0 +1,20 @@
+{
+  "name": "chronolink-fullstack",
+  "version": "1.0.0",
+  "description": "ChronoLink - Connecting Generations Through Timeless Stories",
+  "scripts": {
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "start-backend": "cd backend && npm start",
+    "start-frontend": "cd frontend && npx ng serve",
+    "dev": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "seed": "cd backend && npm run seed",
+    "build": "npm run install-frontend && cd frontend && npx ng build --configuration production",
+    "start": "npm run build && npm run start-backend",
+    "postinstall": "npm run install-all"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
