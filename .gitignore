@@ -102,7 +102,12 @@ temp/
 
 # Uploads (will be recreated in production)
 backend/uploads/
+frontend/.angular/
 
 # Git
 .git/
 .git.zip
+
+# Build artifacts
+*.zip
+*.tar.gz

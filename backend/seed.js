@@ -148,28 +148,8 @@ const seedData = async () => {
     const createdPosts = await Post.create(posts);
     console.log(`✅ Created ${createdPosts.length} posts`);
 
-    // Create some follows between users
-    const john = createdUsers.find(u => u.username === 'grandpa_john');
-    const sarah = createdUsers.find(u => u.username === 'wisdom_sarah');
-    const maya = createdUsers.find(u => u.username === 'young_maya');
-    const alex = createdUsers.find(u => u.username === 'creative_alex');
-
-    // Older generation follows younger generation
-    john.following.push(maya._id, alex._id);
-    sarah.following.push(maya._id, alex._id);
-
-    // Younger generation follows older generation
-    maya.following.push(john._id, sarah._id);
-    alex.following.push(john._id, sarah._id);
-
-    // Update followers arrays
-    maya.followers.push(john._id, sarah._id);
-    alex.followers.push(john._id, sarah._id);
-    john.followers.push(maya._id, alex._id);
-    sarah.followers.push(maya._id, alex._id);
-
-    await Promise.all([john.save(), sarah.save(), maya.save(), alex.save()]);
-    console.log('✅ Created user connections');
+    // Note: Followers system not implemented in current version
+    console.log('✅ Users created successfully (followers system not implemented)');
 
     // Feature some posts (admin action)
     const admin = createdUsers.find(u => u.username === 'admin_user');

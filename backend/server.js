@@ -16,7 +16,7 @@ const limiter = rateLimit({
 
 app.use(limiter);
 app.use(cors({
-  origin: ['http://localhost:4200', 'http://localhost:5000', 'https://chronolink.onrender.com'],
+  origin: ['http://localhost:4200', 'http://localhost:5000', 'https://chronolink-project-1.onrender.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -69,15 +69,28 @@ const upload = multer({
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve static files from Angular build directory
-app.use(express.static(path.join(__dirname, '../frontend/dist/chronolink-frontend')));
+// Serve static files from the Angular app build directory (only in production)
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../frontend/dist/chronolink-frontend');
+  app.use(express.static(frontendPath));
 
-// Handle Angular routing - send all non-API requests to Angular app
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../frontend/dist/chronolink-frontend/index.html'));
-  }
-});
+  // Catch all handler: send back Angular's index.html file for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+} else {
+  // In development, just return a simple message for non-API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.json({
+        message: 'ChronoLink API Server',
+        status: 'Backend is running',
+        frontend: 'http://localhost:4200',
+        docs: 'API endpoints available at /api/*'
+      });
+    }
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
