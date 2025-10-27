@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build-frontend",
   "startCommand": "npm start",
   "devCommand": "npm run dev",
   "installCommand": "npm run install-all",
