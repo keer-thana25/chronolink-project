@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install && cd frontend && npm install && npm run build --configuration production",
+  "buildCommand": "npm install && cd frontend && npm install && npm run build",
   "startCommand": "cd backend && node server.js",
   "devCommand": "npm run dev",
   "installCommand": "npm run install-all",
