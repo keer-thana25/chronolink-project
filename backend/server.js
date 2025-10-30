@@ -70,11 +70,6 @@ const upload = multer({
 // ✅ Serve uploaded images
 app.use('/uploads', express.static(uploadsDir));
 
-// ✅ API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/posts', require('./routes/posts'));
-app.use('/api/users', require('./routes/users'));
-
 // ✅ Serve Angular frontend in production
 if (process.env.NODE_ENV === 'production') {
   // Try multiple possible frontend paths
@@ -97,11 +92,12 @@ if (process.env.NODE_ENV === 'production') {
     console.log('🧭 Looking for main.*.js files:', files.filter(f => f.startsWith('main.') && f.endsWith('.js')));
   }
 
-  // Custom middleware to serve static files with proper MIME types
+  // Custom middleware to serve static files with proper MIME types BEFORE API routes
   app.use((req, res, next) => {
     if (req.path.endsWith('.js')) {
       const filePath = path.join(frontendPath, req.path);
       if (fs.existsSync(filePath)) {
+        console.log('🧭 Serving JS file:', req.path, 'with MIME type: application/javascript');
         res.setHeader('Content-Type', 'application/javascript');
         return res.sendFile(filePath);
       }
@@ -109,7 +105,7 @@ if (process.env.NODE_ENV === 'production') {
     if (req.path.endsWith('.css')) {
       const filePath = path.join(frontendPath, req.path);
       if (fs.existsSync(filePath)) {
-        res.setHeader('Content-Type', 'text/css');
+        console.log('🧭 Serving CSS file:', req.path, 'with MIME type: text/css');
         return res.sendFile(filePath);
       }
     }
@@ -122,6 +118,11 @@ if (process.env.NODE_ENV === 'production') {
       if (filePath.endsWith('.wasm')) res.setHeader('Content-Type', 'application/wasm');
     }
   }));
+
+  // ✅ API Routes (AFTER static file middleware)
+  app.use('/api/auth', require('./routes/auth'));
+  app.use('/api/posts', require('./routes/posts'));
+  app.use('/api/users', require('./routes/users'));
 
   // ✅ Fallback route for Angular
   app.get('*', (req, res) => {
@@ -137,6 +138,11 @@ if (process.env.NODE_ENV === 'production') {
     }
   });
 } else {
+  // ✅ API Routes (dev mode)
+  app.use('/api/auth', require('./routes/auth'));
+  app.use('/api/posts', require('./routes/posts'));
+  app.use('/api/users', require('./routes/users'));
+
   // ✅ Dev mode
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
