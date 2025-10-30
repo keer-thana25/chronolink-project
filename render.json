@@ -4,6 +4,7 @@
   "devCommand": "npm run dev",
   "installCommand": "npm run install-all",
   "framework": "node",
+  "nodeVersion": "20",
   "regions": ["fra1"],
   "environment": {
     "NODE_ENV": "production",
