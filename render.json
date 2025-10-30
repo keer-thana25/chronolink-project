@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "startCommand": "npm start",
+  "buildCommand": "npm run install-all && npm run build",
+  "startCommand": "npm run start-backend",
   "devCommand": "npm run dev",
   "installCommand": "npm run install-all",
   "framework": "node",
