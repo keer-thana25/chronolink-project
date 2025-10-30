@@ -22,13 +22,25 @@ app.use(limiter);
 
 // ✅ CORS configuration
 app.use(cors({
-  origin: [
-    'http://localhost:4200',
-    'http://localhost:4201',
-    'http://localhost:5000',
-    'https://chronolink-project.onrender.com',
-    'https://chronolink-project-1.onrender.com'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:4200',
+      'http://localhost:4201',
+      'http://localhost:5000',
+      'https://chronolink-project.onrender.com',
+      'https://chronolink-project-1.onrender.com'
+    ];
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('🧭 CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -72,17 +84,27 @@ app.use('/uploads', express.static(uploadsDir));
 
 // ✅ Serve Angular frontend in production
 if (process.env.NODE_ENV === 'production') {
-  // Try multiple possible frontend paths
+  // Try more robust frontend path detection for Render deployment
   let frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
-  if (!fs.existsSync(frontendPath)) {
-    frontendPath = path.resolve(__dirname, './frontend/dist/chronolink-frontend');
-  }
-  if (!fs.existsSync(frontendPath)) {
-    frontendPath = path.resolve(__dirname, '../../frontend/dist/chronolink-frontend');
+
+  const possiblePaths = [
+    path.resolve(__dirname, '../frontend/dist/chronolink-frontend'),
+    path.resolve(__dirname, './frontend/dist/chronolink-frontend'),
+    path.resolve(__dirname, '../../frontend/dist/chronolink-frontend'),
+    path.resolve(process.cwd(), 'frontend/dist/chronolink-frontend'),
+    path.resolve(process.cwd(), 'dist/chronolink-frontend')
+  ];
+
+  for (const testPath of possiblePaths) {
+    if (fs.existsSync(testPath)) {
+      frontendPath = testPath;
+      break;
+    }
   }
 
   console.log('🧭 Current working directory:', process.cwd());
   console.log('🧭 __dirname:', __dirname);
+  console.log('🧭 Tested frontend paths:', possiblePaths);
   console.log('🧭 Serving frontend from:', frontendPath);
   console.log('🧭 Frontend path exists:', fs.existsSync(frontendPath));
 
