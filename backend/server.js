@@ -79,12 +79,16 @@ app.use('/api/users', require('./routes/users'));
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.resolve(__dirname, 'dist/chronolink-frontend');
 
-  // Serve static Angular files with proper MIME types
+  // Serve static Angular files with proper MIME types for ES modules
   app.use(express.static(frontendPath, {
     setHeaders: (res, path) => {
       if (path.endsWith('.js')) {
         res.setHeader('Content-Type', 'application/javascript');
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
       }
+      // Ensure proper CORS headers for modules
+      res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     }
   }));
 
