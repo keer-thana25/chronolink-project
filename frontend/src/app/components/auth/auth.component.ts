@@ -71,7 +71,29 @@ import { GSAPService } from '../../services/gsap.service';
             </div>
           </div>
 
-
+          <!-- Generation Selector -->
+          <div *ngIf="!isLoginMode" class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Which generation do you belong to?</label>
+            <div class="flex space-x-2">
+              <button
+                type="button"
+                (click)="authForm.get('generation')?.setValue('young')"
+                [ngClass]="{'active': authForm.get('generation')?.value === 'young'}"
+                class="toggle-button flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200">
+                Younger Generation
+              </button>
+              <button
+                type="button"
+                (click)="authForm.get('generation')?.setValue('old')"
+                [ngClass]="{'active': authForm.get('generation')?.value === 'old'}"
+                class="toggle-button flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200">
+                Older Generation
+              </button>
+            </div>
+            <div *ngIf="authForm.get('generation')?.invalid && authForm.get('generation')?.touched" class="text-red-500 text-sm mt-1">
+              Please select your generation
+            </div>
+          </div>
 
           <!-- Submit Button -->
           <button
@@ -165,10 +187,16 @@ export class AuthComponent implements OnInit, OnDestroy {
   }
 
   private createForm(): FormGroup {
-    return this.fb.group({
+    const group: any = {
       username: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]]
-    });
+    };
+
+    if (!this.isLoginMode) {
+      group['generation'] = ['', [Validators.required]];
+    }
+
+    return this.fb.group(group);
   }
 
   toggleMode(isLogin: boolean): void {

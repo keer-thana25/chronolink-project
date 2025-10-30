@@ -13,7 +13,14 @@ const generateToken = (id) => {
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, generation } = req.body;
+
+    // Validate generation
+    if (!generation || !['young', 'old'].includes(generation)) {
+      return res.status(400).json({
+        message: 'Generation must be either "young" or "old".'
+      });
+    }
 
     // Check if user exists
     const userExists = await User.findOne({ username });
@@ -24,7 +31,8 @@ const register = async (req, res) => {
     // Create user
     const user = await User.create({
       username,
-      password
+      password,
+      generation
     });
 
     const token = generateToken(user._id);
@@ -93,6 +101,7 @@ const getProfile = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        generation: user.generation,
         createdAt: user.createdAt
       }
     });
@@ -108,17 +117,18 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-
-    // For now, only allow updating username (password updates would need special handling)
-    const { username } = req.body;
+    const { username, generation } = req.body;
 
     if (username !== undefined) {
-      // Check if new username is already taken by another user
       const existingUser = await User.findOne({ username });
       if (existingUser && existingUser._id.toString() !== user._id.toString()) {
         return res.status(400).json({ message: 'Username already exists' });
       }
       user.username = username;
+    }
+
+    if (generation && ['young', 'old'].includes(generation)) {
+      user.generation = generation;
     }
 
     await user.save();
@@ -128,6 +138,7 @@ const updateProfile = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        generation: user.generation,
         createdAt: user.createdAt
       }
     });

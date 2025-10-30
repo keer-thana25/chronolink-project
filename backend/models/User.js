@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
   },
   generation: {
     type: String,
-    default: 'Unknown'
+    enum: ['young', 'old'], // Only two options allowed
+    required: [true, 'Please select your generation'] // Must be selected during signup
   },
   isActive: {
     type: Boolean,
@@ -27,7 +28,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving
+// 🔐 Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
 
@@ -40,12 +41,12 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Compare password method
+// 🔍 Compare entered password with stored hash
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Remove password from JSON output
+// 🧹 Remove password field when converting to JSON
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();
   delete userObject.password;

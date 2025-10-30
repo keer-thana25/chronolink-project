@@ -80,10 +80,11 @@ const createPost = async (req, res) => {
     // Handle uploaded file
     let mediaUrl = '';
     let imageUrl = '';
-    if (req.file) {
-      mediaUrl = `/uploads/${req.file.filename}`;
-      imageUrl = mediaUrl; // Set imageUrl for the model requirement
+    if (req.file && req.file.path) {
+      mediaUrl = req.file.path; // Cloudinary gives full HTTPS URL
+    imageUrl = mediaUrl;
     }
+
 
     // Map frontend category to backend enum if needed
     let mappedCategory = category;
@@ -199,6 +200,7 @@ const deletePost = async (req, res) => {
 // @access  Private
 const likePost = async (req, res) => {
   try {
+    console.log('Attempting to like/unlike post. User ID:', req.user?.id); // Debug log
     const post = await Post.findById(req.params.id);
 
     if (!post) {
@@ -351,6 +353,39 @@ const getGenerationConnection = async (req, res) => {
   }
 };
 
+// @desc    Get generation connection posts for a logged-in user
+// @route   GET /api/posts/generation-connection/me
+// @access  Private
+const getGenerationConnectionForUser = async (req, res) => {
+  try {
+    const allPosts = await Post.find({ isActive: true })
+      .populate('author', 'username generation')
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+
+    const postsWithLikeStatus = allPosts.map(post => ({
+      ...post,
+      id: post._id.toString(), // Explicitly map _id to id
+      isLiked: post.likes.some(like => like.user.toString() === req.user.id)
+    }));
+
+    const youngPosts = postsWithLikeStatus.filter(p => p.generation === 'young');
+    const oldPosts = postsWithLikeStatus.filter(p => p.generation === 'old');
+    const unknownPosts = postsWithLikeStatus.filter(p => p.generation === 'Unknown');
+
+    const alternatingPosts = [...unknownPosts, ...youngPosts, ...oldPosts];
+
+    res.json({
+      success: true,
+      posts: alternatingPosts.slice(0, 10)
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error getting generation connection posts' });
+  }
+};
+
 // @desc    Get AI recommendations based on user interests
 // @route   GET /api/posts/recommendations
 // @access  Public
@@ -484,6 +519,7 @@ const seedVisuals = async (req, res) => {
 module.exports = {
   getAllPosts,
   getPostById,
+  getGenerationConnectionForUser,
   createPost,
   updatePost,
   deletePost,

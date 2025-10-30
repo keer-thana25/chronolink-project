@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, HostListener } from '@angu
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 import { PostsService, Post } from '../../services/posts.service';
 import { GSAPService } from '../../services/gsap.service';
 
@@ -19,7 +20,6 @@ import { GSAPService } from '../../services/gsap.service';
               <h1 class="text-2xl font-bold text-chronolink-primary font-display">ChronoLink</h1>
             </div>
             <div class="flex items-center space-x-4">
-              <!-- Navigation -->
               <nav class="hidden md:flex space-x-6">
                 <a routerLink="/home" class="text-gray-600 hover:text-chronolink-primary transition-colors duration-200">Home</a>
                 <a routerLink="/connect" class="text-chronolink-primary font-medium">Connect</a>
@@ -42,7 +42,6 @@ import { GSAPService } from '../../services/gsap.service';
 
       <!-- Main Content -->
       <div class="flex items-center justify-center min-h-screen px-4 relative">
-        <!-- Navigation Arrows -->
         <button (click)="previousPost()" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200">
           <i class="fas fa-chevron-left text-2xl text-gray-600"></i>
         </button>
@@ -66,6 +65,7 @@ import { GSAPService } from '../../services/gsap.service';
                (touchstart)="onTouchStart($event)"
                (touchmove)="onTouchMove($event)"
                (touchend)="onTouchEnd($event)">
+            
             <!-- Post Header -->
             <div class="flex items-center justify-between p-4 border-b border-gray-100">
               <div class="flex items-center space-x-3">
@@ -88,27 +88,32 @@ import { GSAPService } from '../../services/gsap.service';
                    loading="lazy" (error)="onImageError($event, currentPost.generation)">
               <div class="absolute top-4 right-4">
                 <span class="px-2 py-1 bg-black bg-opacity-50 text-white rounded-full text-xs font-medium">
-                  {{ currentPost.generation === 'young' ? 'Young' : currentPost.generation === 'old' ? 'Old' : 'User' }}
+                  {{ currentPost.generation === 'young' ? 'Younger Generation' : currentPost.generation === 'old' ? 'Older Generation' : 'Unknown Generation' }}
                 </span>
               </div>
             </div>
 
             <!-- Post Actions -->
             <div class="p-4 border-b border-gray-100">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center space-x-4">
-                  <button (click)="likePost()" class="flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors duration-200">
-                    <i class="far fa-heart text-2xl"></i>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-6">
+                  <!-- Like Button -->
+                  <button (click)="likePost()" class="flex items-center space-x-1 transition-colors duration-200 focus:outline-none">
+                    <i 
+                      [ngClass]="{
+                        'fas fa-heart text-2xl text-red-500': currentPost?.isLiked,
+                        'far fa-heart text-2xl text-gray-600': !currentPost?.isLiked
+                      }">
+                    </i>
                   </button>
+
                   <button (click)="commentPost()" class="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors duration-200">
                     <i class="far fa-comment text-2xl"></i>
                   </button>
-                  <button (click)="sharePost()" class="flex items-center space-x-1 text-gray-600 hover:text-green-500 transition-colors duration-200">
-                    <i class="fas fa-share text-2xl"></i>
-                  </button>
                 </div>
-                <div class="text-sm text-gray-500">
-                  {{ currentPost.likeCount || 0 }} likes • {{ currentPost.commentCount || 0 }} comments
+                <div class="flex items-center space-x-3 text-xs text-gray-500">
+                  <span>{{ currentPost.likeCount || 0 }} likes</span>
+                  <span>{{ currentPost.commentCount || 0 }} comments</span>
                 </div>
               </div>
             </div>
@@ -151,7 +156,7 @@ import { GSAPService } from '../../services/gsap.service';
 })
 export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterViewInit {
   posts: Post[] = [];
-  currentPost: Post | null = null;
+  currentPost: any = null;
   currentIndex = 0;
   isLoading = false;
   currentUser: any = { username: 'Guest' };
@@ -163,7 +168,8 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
   constructor(
     private postsService: PostsService,
     private gsapService: GSAPService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -198,63 +204,37 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
       });
   }
 
-  flipCard(): void {
-    const card = document.querySelector('.post-card');
-    if (card) {
-      card.classList.toggle('flipped');
-
-      // Add flip animation
-      const cardInner = card.querySelector('.post-card-inner');
-      if (cardInner) {
-        this.gsapService.animate(cardInner, {
-          duration: 0.6,
-          rotationY: card.classList.contains('flipped') ? 180 : 0,
-          ease: 'power2.inOut'
-        });
-      }
-    }
-  }
-
-  onTouchStart(event: TouchEvent): void {
-    this.touchStartX = event.touches[0].clientX;
-    this.touchStartY = event.touches[0].clientY;
-  }
-
-  onTouchMove(event: TouchEvent): void {
-    if (!this.touchStartX || !this.touchStartY) return;
-
-    const currentX = event.touches[0].clientX;
-    const currentY = event.touches[0].clientY;
-    const diffX = this.touchStartX - currentX;
-    const diffY = this.touchStartY - currentY;
-
-    // If horizontal swipe is greater than vertical, prevent default
-    if (Math.abs(diffX) > Math.abs(diffY)) {
-      event.preventDefault();
-    }
-  }
-
-  onTouchEnd(event: TouchEvent): void {
-    if (!this.touchStartX || !this.touchStartY) return;
-
-    const currentX = event.changedTouches[0].clientX;
-    const diffX = this.touchStartX - currentX;
-
-    // Swipe threshold
-    const threshold = 50;
-
-    if (Math.abs(diffX) > threshold) {
-      if (diffX > 0) {
-        // Swipe left - next post
-        this.nextPost();
-      } else {
-        // Swipe right - previous post
-        this.previousPost();
-      }
+  likePost(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth']);
+      return;
     }
 
-    this.touchStartX = 0;
-    this.touchStartY = 0;
+    if (!this.currentPost) return;
+
+    this.postsService.likePost(this.currentPost.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            // Update the current post with the definitive state from the backend
+            this.currentPost.isLiked = response.isLiked;
+            this.currentPost.likeCount = response.likes;
+          }
+        },
+        error: (error) => {
+          console.error('Error liking post:', error);
+          // Optionally, you could add UI feedback here to inform the user that the like failed.
+        }
+      });
+  }
+
+  commentPost(): void {
+    console.log('Comment on post:', this.currentPost?.id);
+  }
+
+  sharePost(): void {
+    console.log('Share post:', this.currentPost?.id);
   }
 
   nextPost(): void {
@@ -269,74 +249,29 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
     this.animateCardSlide('right');
   }
 
-  likePost(): void {
-    if (this.currentPost) {
-      this.postsService.likePost(this.currentPost.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response: any) => {
-            if (response.success) {
-              this.currentPost!.likeCount = response.likes;
-              // Update the post in the posts array as well
-              const postIndex = this.posts.findIndex(p => p.id === this.currentPost!.id);
-              if (postIndex !== -1) {
-                this.posts[postIndex].likeCount = response.likes;
-              }
-            }
-          },
-          error: (error: any) => {
-            console.error('Error liking post:', error);
-          }
-        });
-    }
-  }
-
-  commentPost(): void {
-    // For now, just log - in real app, open comment modal
-    console.log('Comment on post:', this.currentPost?.id);
-  }
-
-  sharePost(): void {
-    // For now, just log - in real app, open share modal
-    console.log('Share post:', this.currentPost?.id);
-  }
-
   getInitials(username: string | undefined): string {
     if (!username) return 'U';
     return username.substring(0, 2).toUpperCase();
-  }
-
-  trackByPostId(index: number, post: Post): string {
-    return post.id;
   }
 
   goToProfile(): void {
     this.router.navigate(['/profile']);
   }
 
-  createPost(): void {
-    this.router.navigate(['/create-post']);
+  onImageError(event: Event, generation: string): void {
+    const target = event.target as HTMLImageElement;
+    target.src = generation === 'young'
+      ? 'https://via.placeholder.com/800x800/ff6b9d/ffffff?text=🚀'
+      : 'https://via.placeholder.com/800x800/4e54c8/ffffff?text=🧘';
   }
 
   private animateEntry(): void {
-    // Animate header
     this.gsapService.animateFrom('header', {
       duration: 0.8,
       y: -50,
       opacity: 0,
       ease: 'power2.out'
     });
-
-    // Animate arrows
-    this.gsapService.animateFrom('.arrows-container', {
-      duration: 1,
-      scale: 0,
-      opacity: 0,
-      delay: 0.5,
-      ease: 'back.out(1.7)'
-    });
-
-    // Animate post card
     this.gsapService.animateFrom('.post-card', {
       duration: 0.8,
       scale: 0.8,
@@ -366,24 +301,52 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
     }
   }
 
-  onImageError(event: Event, generation: string): void {
-    const target = event.target as HTMLImageElement;
-    // Fallback to a placeholder image based on generation
-    if (generation === 'young') {
-      target.src = 'https://via.placeholder.com/800x800/ff6b9d/ffffff?text=🚀';
-    } else {
-      target.src = 'https://via.placeholder.com/800x800/4e54c8/ffffff?text=🧘';
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  onTouchMove(event: TouchEvent): void {
+    if (!this.touchStartX || !this.touchStartY) return;
+    
+    const touchEndX = event.touches[0].clientX;
+    const touchEndY = event.touches[0].clientY;
+    
+    const diffX = this.touchStartX - touchEndX;
+    const diffY = this.touchStartY - touchEndY;
+    
+    // Prevent vertical scrolling while swiping horizontally
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      event.preventDefault();
     }
+  }
+
+  onTouchEnd(event: TouchEvent): void {
+    if (!this.touchStartX || !this.touchStartY) return;
+    
+    const touchEndX = event.changedTouches[0].clientX;
+    const diffX = this.touchStartX - touchEndX;
+    
+    const SWIPE_THRESHOLD = 50;
+    
+    if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+      if (diffX > 0) {
+        // Swiped left, show next post
+        this.nextPost();
+      } else {
+        // Swiped right, show previous post
+        this.previousPost();
+      }
+    }
+    
+    this.touchStartX = 0;
+    this.touchStartY = 0;
   }
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     if (this.posts.length === 0) return;
-
-    if (event.key === 'ArrowLeft') {
-      this.previousPost();
-    } else if (event.key === 'ArrowRight') {
-      this.nextPost();
-    }
+    if (event.key === 'ArrowLeft') this.previousPost();
+    else if (event.key === 'ArrowRight') this.nextPost();
   }
 }

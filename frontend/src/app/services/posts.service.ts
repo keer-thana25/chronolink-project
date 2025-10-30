@@ -36,6 +36,7 @@ export interface Post {
     createdAt: string;
   }>;
   isFeatured: boolean;
+  isLiked?: boolean;
   views: number;
   likeCount?: number;
   commentCount?: number;
@@ -134,7 +135,12 @@ export class PostsService {
   }
 
   getGenerationConnection(): Observable<{ success: boolean; posts: Post[] }> {
-    return this.http.get<{ success: boolean; posts: Post[] }>(`${this.apiUrl}/posts/generation-connection`);
+    const isAuthenticated = this.authService.isAuthenticated();
+    const endpoint = isAuthenticated
+      ? `${this.apiUrl}/posts/generation-connection/me`
+      : `${this.apiUrl}/posts/generation-connection`;
+    console.log('PostsService: Fetching generation connection posts from:', endpoint, 'Is Authenticated:', isAuthenticated); // Debug log
+    return this.http.get<{ success: boolean; posts: Post[] }>(endpoint);
   }
 
   getRecommendations(userId?: string): Observable<{ success: boolean; posts: Post[]; basedOn: string }> {
