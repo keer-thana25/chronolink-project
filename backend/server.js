@@ -70,31 +70,46 @@ const upload = multer({
 // ✅ Static route for uploaded images
 app.use('/uploads', express.static(uploadsDir));
 
-// ✅ API Routes
+// ✅ Serve Angular frontend in production FIRST (before API routes)
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
+
+  // Serve static Angular files with proper MIME types
+  app.use(express.static(frontendPath, {
+    setHeaders: (res, filePath) => {
+      // Set correct MIME types for different file types
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.json')) {
+        res.setHeader('Content-Type', 'application/json');
+      } else if (filePath.endsWith('.wasm')) {
+        res.setHeader('Content-Type', 'application/wasm');
+      }
+      // Add cache control for static assets
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+    }
+  }));
+}
+
+// ✅ API Routes (after static files to avoid conflicts)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/users', require('./routes/users'));
 
-// ✅ Serve Angular frontend in production
+// ✅ Fallback for Angular routing (ONLY in production and ONLY for non-API routes)
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
 
-  // Serve static Angular files with proper MIME types for ES modules
-  app.use(express.static(frontendPath, {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-      }
-      // Ensure proper CORS headers for modules
-      res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
-      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    }
-  }));
-
-  // Fallback for Angular routing
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(frontendPath, 'index.html'));
+    // Only serve index.html for non-API routes
+    if (!req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
+      res.sendFile(path.resolve(frontendPath, 'index.html'));
+    } else {
+      // For API routes that somehow reach here, return 404
+      res.status(404).json({ message: 'Not found' });
+    }
   });
 } else {
   // ✅ Simple dev response
