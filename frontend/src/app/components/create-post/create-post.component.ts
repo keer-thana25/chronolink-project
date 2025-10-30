@@ -70,9 +70,17 @@ import { AuthService, User } from '../../services/auth.service';
                 formControlName="category"
                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-chronolink-primary focus:border-transparent transition-all duration-200">
                 <option value="">Select a category</option>
-                <option value="Spiritual">Spiritual</option>
+                <option value="Spirituality">Spirituality</option>
+                <option value="Literature">Literature</option>
+                <option value="Art">Art</option>
+                <option value="Heritage">Heritage</option>
+                <option value="Inspiration">Inspiration</option>
                 <option value="Technology">Technology</option>
-                <option value="blend">Blend</option>
+                <option value="Music">Music</option>
+                <option value="History">History</option>
+                <option value="spiritual">spiritual</option>
+                <option value="tech">tech</option>
+                <option value="blend">blend</option>
               </select>
               <div *ngIf="postForm.get('category')?.invalid && postForm.get('category')?.touched" class="text-red-500 text-sm mt-1">
                 Category is required

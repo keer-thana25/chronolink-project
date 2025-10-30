@@ -8,7 +8,7 @@ export interface Post {
   id: string;
   imageUrl: string;
   caption: string;
-  category: 'spiritual' | 'tech' | 'blend';
+  category: 'Spirituality' | 'Literature' | 'Art' | 'Heritage' | 'Inspiration' | 'Technology' | 'Music' | 'History' | 'spiritual' | 'tech' | 'blend';
   createdBy: string;
   title?: string;
   content?: string;
@@ -143,10 +143,13 @@ export class PostsService {
     return this.http.get<{ success: boolean; posts: Post[] }>(endpoint);
   }
 
-  getRecommendations(userId?: string): Observable<{ success: boolean; posts: Post[]; basedOn: string }> {
+  getRecommendations(userId?: string, category?: string): Observable<{ success: boolean; posts: Post[]; basedOn: string }> {
     let params = new HttpParams();
     if (userId) {
       params = params.set('userId', userId);
+    }
+    if (category) {
+      params = params.set('category', category);
     }
 
     return this.http.get<{ success: boolean; posts: Post[]; basedOn: string }>(`${this.apiUrl}/posts/recommendations`, { params });

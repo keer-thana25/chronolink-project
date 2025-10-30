@@ -86,11 +86,8 @@ const createPost = async (req, res) => {
     }
 
 
-    // Map frontend category to backend enum if needed
+    // Keep the category as-is since we now support all categories
     let mappedCategory = category;
-    if (category === 'Spiritual') mappedCategory = 'spiritual';
-    else if (category === 'Technology') mappedCategory = 'tech';
-    else if (category === 'blend') mappedCategory = 'blend';
 
     // Set generation based on user profile (fallback to 'young')
     const userGeneration = req.user?.generation || 'young';
@@ -381,10 +378,17 @@ const getGenerationConnectionForUser = async (req, res) => {
 const getRecommendations = async (req, res) => {
   try {
     const userId = req.query.userId;
+    const selectedCategory = req.query.category; // New parameter for selected category
+
     let categories = [];
 
-    // For now, use popular categories since we simplified the user model
-    categories = ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration'];
+    if (selectedCategory) {
+      // If a specific category is selected, show posts from that category
+      categories = [selectedCategory];
+    } else {
+      // Default to popular categories if no specific category selected
+      categories = ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration'];
+    }
 
     const posts = await Post.find({
       category: { $in: categories },
@@ -393,12 +397,12 @@ const getRecommendations = async (req, res) => {
     })
       .populate('author', 'username')
       .sort({ likes: -1, createdAt: -1 })
-      .limit(10);
+      .limit(20); // Increased limit for better recommendations
 
     res.json({
       success: true,
       posts,
-      basedOn: 'popular_categories'
+      basedOn: selectedCategory ? `category_${selectedCategory}` : 'popular_categories'
     });
   } catch (error) {
     console.error(error);

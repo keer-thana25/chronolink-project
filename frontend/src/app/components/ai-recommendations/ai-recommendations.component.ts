@@ -208,7 +208,10 @@ export class AiRecommendationsComponent implements OnInit, OnDestroy {
     'Inspiration',
     'Technology',
     'Music',
-    'History'
+    'History',
+    'spiritual',
+    'tech',
+    'blend'
   ];
 
   private destroy$ = new Subject<void>();
@@ -241,7 +244,7 @@ export class AiRecommendationsComponent implements OnInit, OnDestroy {
 
   private loadRecommendations(): void {
     this.isLoading = true;
-    this.postsService.getRecommendations(this.currentUser?.id)
+    this.postsService.getRecommendations(this.currentUser?.id, this.selectedCategory)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
@@ -259,7 +262,7 @@ export class AiRecommendationsComponent implements OnInit, OnDestroy {
 
   selectCategory(category: string): void {
     this.selectedCategory = this.selectedCategory === category ? '' : category;
-    // In a real implementation, you would filter posts or make a new API call
+    this.loadRecommendations(); // Reload recommendations with the selected category
     this.animateCategorySelection();
   }
 

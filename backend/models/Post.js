@@ -12,7 +12,7 @@ const postSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['spiritual', 'tech', 'blend'],
+    enum: ['Spirituality', 'Literature', 'Art', 'Heritage', 'Inspiration', 'Technology', 'Music', 'History', 'spiritual', 'tech', 'blend'],
     required: true
   },
   createdBy: {
