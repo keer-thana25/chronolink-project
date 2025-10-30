@@ -77,10 +77,16 @@ app.use('/api/users', require('./routes/users'));
 
 // ✅ Serve Angular frontend in production
 if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
+  const frontendPath = path.resolve(__dirname, 'dist/chronolink-frontend');
 
-  // Serve static Angular files
-  app.use(express.static(frontendPath));
+  // Serve static Angular files with proper MIME types
+  app.use(express.static(frontendPath, {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    }
+  }));
 
   // Fallback for Angular routing
   app.get('*', (req, res) => {
