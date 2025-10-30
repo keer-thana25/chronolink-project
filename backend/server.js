@@ -12,7 +12,7 @@ const app = express();
 // ✅ Trust proxy (needed for Render + rate limiting)
 app.set('trust proxy', 1);
 
-// ✅ Updated Rate Limiting – safer & more lenient
+// ✅ Rate Limiting (safe defaults)
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 1000, // allow 1000 requests per minute per IP
@@ -34,7 +34,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// ✅ JSON parsing limits
+// ✅ Body parsers
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -70,26 +70,29 @@ const upload = multer({
 // ✅ Static route for uploaded images
 app.use('/uploads', express.static(uploadsDir));
 
-// ✅ Routes
+// ✅ API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/users', require('./routes/users'));
 
-// ✅ Serve frontend build in production
+// ✅ Serve Angular frontend in production
 if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../frontend/dist/chronolink-frontend');
+  const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
+
+  // Serve static Angular files
   app.use(express.static(frontendPath));
 
+  // Fallback for Angular routing
   app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    res.sendFile(path.resolve(frontendPath, 'index.html'));
   });
 } else {
-  // ✅ Simple message in development
+  // ✅ Simple dev response
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
       res.json({
         message: 'ChronoLink API Server',
-        status: 'Backend is running',
+        status: 'Backend is running locally',
         frontend: 'http://localhost:4200',
         docs: 'API endpoints available at /api/*'
       });
@@ -103,6 +106,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// ✅ Start server
+// ✅ Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
