@@ -19,6 +19,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
+  generation: string;
 }
 
 export interface AuthResponse {
