@@ -82,13 +82,42 @@ if (process.env.NODE_ENV === 'production') {
   if (!fs.existsSync(frontendPath)) {
     frontendPath = path.resolve(__dirname, './frontend/dist/chronolink-frontend');
   }
+  if (!fs.existsSync(frontendPath)) {
+    frontendPath = path.resolve(__dirname, '../../frontend/dist/chronolink-frontend');
+  }
 
+  console.log('🧭 Current working directory:', process.cwd());
+  console.log('🧭 __dirname:', __dirname);
   console.log('🧭 Serving frontend from:', frontendPath);
+  console.log('🧭 Frontend path exists:', fs.existsSync(frontendPath));
+
+  if (fs.existsSync(frontendPath)) {
+    const files = fs.readdirSync(frontendPath);
+    console.log('🧭 Files in frontend path (first 10):', files.slice(0, 10));
+    console.log('🧭 Looking for main.*.js files:', files.filter(f => f.startsWith('main.') && f.endsWith('.js')));
+  }
+
+  // Custom middleware to serve static files with proper MIME types
+  app.use((req, res, next) => {
+    if (req.path.endsWith('.js')) {
+      const filePath = path.join(frontendPath, req.path);
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'application/javascript');
+        return res.sendFile(filePath);
+      }
+    }
+    if (req.path.endsWith('.css')) {
+      const filePath = path.join(frontendPath, req.path);
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'text/css');
+        return res.sendFile(filePath);
+      }
+    }
+    next();
+  });
 
   app.use(express.static(frontendPath, {
     setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
-      if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
       if (filePath.endsWith('.json')) res.setHeader('Content-Type', 'application/json');
       if (filePath.endsWith('.wasm')) res.setHeader('Content-Type', 'application/wasm');
     }
@@ -97,7 +126,12 @@ if (process.env.NODE_ENV === 'production') {
   // ✅ Fallback route for Angular
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
-      res.sendFile(path.join(frontendPath, 'index.html'));
+      const indexPath = path.join(frontendPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send('Frontend not found');
+      }
     } else {
       res.status(404).json({ message: 'Not found' });
     }
