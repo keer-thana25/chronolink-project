@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm install && cd frontend && npm install && npm run build --configuration production",
+  "buildCommand": "npm run install-all && npm run build",
   "startCommand": "cd backend && node server.js",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "npm run install-all",
   "framework": "node",
   "nodeVersion": "20",
   "regions": ["fra1"],
