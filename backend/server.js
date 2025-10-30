@@ -15,7 +15,7 @@ app.set('trust proxy', 1);
 // ✅ Rate Limiting (safe defaults)
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 1000, // allow 1000 requests per minute per IP
+  max: 1000,
   message: 'Too many requests, please try again later.'
 });
 app.use(limiter);
@@ -49,7 +49,7 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// ✅ Multer configuration for file uploads
+// ✅ Multer config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
@@ -60,64 +60,55 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Only image files are allowed'), false);
   }
 });
 
-// ✅ Static route for uploaded images
+// ✅ Serve uploaded images
 app.use('/uploads', express.static(uploadsDir));
 
-// ✅ Serve Angular frontend in production FIRST (before API routes)
-if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
-
-  // Serve static Angular files with proper MIME types
-  app.use(express.static(frontendPath, {
-    setHeaders: (res, filePath) => {
-      // Set correct MIME types for different file types
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.json')) {
-        res.setHeader('Content-Type', 'application/json');
-      } else if (filePath.endsWith('.wasm')) {
-        res.setHeader('Content-Type', 'application/wasm');
-      }
-      // Add cache control for static assets
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
-    }
-  }));
-}
-
-// ✅ API Routes (after static files to avoid conflicts)
+// ✅ API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/users', require('./routes/users'));
 
-// ✅ Fallback for Angular routing (ONLY in production and ONLY for non-API routes)
+// ✅ Serve Angular frontend in production
 if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
+  // Try multiple possible frontend paths
+  let frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
+  if (!fs.existsSync(frontendPath)) {
+    frontendPath = path.resolve(__dirname, './frontend/dist/chronolink-frontend');
+  }
 
+  console.log('🧭 Serving frontend from:', frontendPath);
+
+  app.use(express.static(frontendPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
+      if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+      if (filePath.endsWith('.json')) res.setHeader('Content-Type', 'application/json');
+      if (filePath.endsWith('.wasm')) res.setHeader('Content-Type', 'application/wasm');
+    }
+  }));
+
+  // ✅ Fallback route for Angular
   app.get('*', (req, res) => {
-    // Only serve index.html for non-API routes
     if (!req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
-      res.sendFile(path.resolve(frontendPath, 'index.html'));
+      res.sendFile(path.join(frontendPath, 'index.html'));
     } else {
-      // For API routes that somehow reach here, return 404
       res.status(404).json({ message: 'Not found' });
     }
   });
 } else {
-  // ✅ Simple dev response
+  // ✅ Dev mode
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
       res.json({
         message: 'ChronoLink API Server',
-        status: 'Backend is running locally',
+        status: 'Backend running locally',
         frontend: 'http://localhost:4200',
         docs: 'API endpoints available at /api/*'
       });
