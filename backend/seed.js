@@ -24,7 +24,7 @@ const seedData = async () => {
         username: 'grandpa_john',
         password: 'password123',
         role: 'user',
-        generation: 'older',
+        generation: 'old',
         bio: '80 years of wisdom to share. Love telling stories about the old days.',
         interests: ['Heritage', 'History', 'Literature'],
         achievements: ['Best Storyteller', 'Cultural Keeper']
@@ -33,7 +33,7 @@ const seedData = async () => {
         username: 'wisdom_sarah',
         password: 'password123',
         role: 'user',
-        generation: 'older',
+        generation: 'old',
         bio: 'Retired teacher with a passion for literature and inspiring young minds.',
         interests: ['Literature', 'Inspiration', 'Art'],
         achievements: ['Wisdom Sharer', 'Inspiration Giver']
@@ -42,7 +42,7 @@ const seedData = async () => {
         username: 'young_maya',
         password: 'password123',
         role: 'user',
-        generation: 'younger',
+        generation: 'young',
         bio: 'College student studying technology and history. Love connecting past and present.',
         interests: ['Technology', 'History', 'Heritage'],
         achievements: ['Bridge Builder']
@@ -51,7 +51,7 @@ const seedData = async () => {
         username: 'creative_alex',
         password: 'password123',
         role: 'user',
-        generation: 'younger',
+        generation: 'young',
         bio: 'Digital artist exploring traditional art forms through modern technology.',
         interests: ['Art', 'Technology', 'Inspiration'],
         achievements: ['Cultural Keeper']
@@ -60,7 +60,7 @@ const seedData = async () => {
         username: 'admin_user',
         password: 'admin123',
         role: 'admin',
-        generation: 'older',
+        generation: 'old',
         bio: 'Platform administrator ensuring quality content and community guidelines.',
         interests: ['Literature', 'Art', 'Heritage'],
         achievements: ['Best Storyteller', 'Cultural Keeper', 'Wisdom Sharer']
@@ -74,74 +74,70 @@ const seedData = async () => {
     const posts = [
       // Older generation posts
       {
-        title: 'The Lost Art of Letter Writing',
+        caption: 'The Lost Art of Letter Writing',
         content: 'In my time, we used to write letters by hand. Each word was carefully chosen, each sentence crafted with love. There was something magical about receiving a handwritten letter in the mail. The paper would carry the scent of the sender, and you could almost hear their voice as you read. Today, everything is instant, but we\'ve lost that personal touch. Young people, I encourage you to try writing a letter to someone you love. You might be surprised by how meaningful it feels.',
         category: 'Literature',
-        generation: 'older',
+        generation: 'old',
         author: createdUsers.find(u => u.username === 'grandpa_john')._id,
-        mediaType: 'image',
-        mediaUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=center'
+        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=center'
       },
       {
-        title: 'Lessons from the Great Depression',
+        caption: 'Lessons from the Great Depression',
         content: 'I was just a child during the Great Depression, but those years taught me valuable lessons about resilience and gratitude. We had very little, but we made do with what we had. I learned that happiness doesn\'t come from material possessions, but from the relationships we build and the simple joys in life. When I see young people today struggling with modern pressures, I want to tell them: you are stronger than you think, and the most important things in life aren\'t things at all.',
         category: 'Heritage',
-        generation: 'older',
+        generation: 'old',
         author: createdUsers.find(u => u.username === 'wisdom_sarah')._id,
-        mediaType: 'text'
+        imageUrl: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop&crop=center'
       },
       {
-        title: 'Traditional Recipes That Tell Our Family Story',
+        caption: 'Traditional Recipes That Tell Our Family Story',
         content: 'Every Sunday, my grandmother would make her famous apple pie. The recipe wasn\'t written down - it was passed from generation to generation through hands-on teaching. I still remember the smell of cinnamon and fresh apples filling the kitchen. These recipes aren\'t just about food; they\'re about preserving our family history and the love that went into every meal. I\'ve started teaching my grandchildren these same recipes, ensuring our traditions continue.',
         category: 'Heritage',
-        generation: 'older',
+        generation: 'old',
         author: createdUsers.find(u => u.username === 'grandpa_john')._id,
-        mediaType: 'image',
-        mediaUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop&crop=center'
+        imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop&crop=center'
       },
       {
-        title: 'The Power of Patience in a Fast World',
+        caption: 'The Power of Patience in a Fast World',
         content: 'When I was young, we didn\'t have instant everything. If you wanted to talk to someone far away, you wrote a letter and waited weeks for a response. If you wanted to learn something, you went to the library and searched through books. This taught us patience and the value of anticipation. Today, everything is instant, but I wonder if we\'ve lost something precious. Sometimes, waiting makes the reward that much sweeter.',
         category: 'Inspiration',
-        generation: 'older',
+        generation: 'old',
         author: createdUsers.find(u => u.username === 'wisdom_sarah')._id,
-        mediaType: 'text'
+        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=center'
       },
 
       // Younger generation posts
       {
-        title: 'Bridging the Digital Divide',
+        caption: 'Bridging the Digital Divide',
         content: 'As a young person passionate about technology, I\'ve made it my mission to help older adults learn digital skills. I volunteer at a local senior center, teaching everything from video calls to social media. The joy on their faces when they connect with distant grandchildren for the first time is priceless. Technology should bring us together, not create barriers between generations. I believe we young people have a responsibility to share our digital knowledge while learning from the wisdom of our elders.',
         category: 'Technology',
-        generation: 'younger',
+        generation: 'young',
         author: createdUsers.find(u => u.username === 'young_maya')._id,
-        mediaType: 'text'
+        imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop&crop=center'
       },
       {
-        title: 'Digital Art Meets Traditional Crafts',
+        caption: 'Digital Art Meets Traditional Crafts',
         content: 'I\'ve been experimenting with combining traditional art techniques with digital tools. Using my grandmother\'s embroidery patterns as inspiration, I create digital illustrations that blend the old with the new. It\'s fascinating how technology can preserve and transform traditional art forms. I\'ve started an online community where young artists share their digital interpretations of traditional crafts. The feedback from older artisans has been incredible - they see it as a way to keep their traditions alive in the modern world.',
         category: 'Art',
-        generation: 'younger',
+        generation: 'young',
         author: createdUsers.find(u => u.username === 'creative_alex')._id,
-        mediaType: 'image',
-        mediaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop&crop=center'
+        imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop&crop=center'
       },
       {
-        title: 'Why History Matters More Than Ever',
+        caption: 'Why History Matters More Than Ever',
         content: 'Studying history isn\'t just about memorizing dates and events - it\'s about understanding how we got here and learning from the past to build a better future. As a history major, I\'m constantly amazed by how the challenges we face today echo those of previous generations. I\'ve started interviewing older family members about their life experiences, and their stories have completely changed my perspective on current events. We need to listen to our elders - they\'ve lived through what we\'re only reading about in books.',
         category: 'History',
-        generation: 'younger',
+        generation: 'young',
         author: createdUsers.find(u => u.username === 'young_maya')._id,
-        mediaType: 'image',
-        mediaUrl: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop&crop=center'
+        imageUrl: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop&crop=center'
       },
       {
-        title: 'The Future of Sustainable Living',
+        caption: 'The Future of Sustainable Living',
         content: 'Growing up, I heard stories from my grandparents about how things used to be made to last. In our throwaway culture, I think we\'ve lost that appreciation for quality and sustainability. I\'ve been learning traditional skills like mending clothes, growing vegetables, and preserving food - not just for nostalgia, but because these skills are becoming essential again. By combining traditional wisdom with modern innovation, I believe we can create a more sustainable future. My grandparents are my greatest teachers in this journey.',
         category: 'Inspiration',
-        generation: 'younger',
+        generation: 'young',
         author: createdUsers.find(u => u.username === 'creative_alex')._id,
-        mediaType: 'text'
+        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=center'
       }
     ];
 

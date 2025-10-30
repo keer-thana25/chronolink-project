@@ -8,6 +8,10 @@ export interface User {
   id: string;
   username: string;
   generation: string;
+  followers?: string[];
+  following?: string[];
+  followersCount?: number;
+  followingCount?: number;
   createdAt?: string;
 }
 
@@ -135,5 +139,21 @@ export class AuthService {
         this.logout();
       }
     });
+  }
+
+  followUser(userId: string): Observable<{ success: boolean; message: string; following: number; followers: number }> {
+    return this.http.post<{ success: boolean; message: string; following: number; followers: number }>(`${this.apiUrl}/users/${userId}/follow`, {});
+  }
+
+  unfollowUser(userId: string): Observable<{ success: boolean; message: string; following: number; followers: number }> {
+    return this.http.delete<{ success: boolean; message: string; following: number; followers: number }>(`${this.apiUrl}/users/${userId}/follow`);
+  }
+
+  getUserFollowers(userId: string): Observable<{ success: boolean; followers: any[] }> {
+    return this.http.get<{ success: boolean; followers: any[] }>(`${this.apiUrl}/users/${userId}/followers`);
+  }
+
+  getUserFollowing(userId: string): Observable<{ success: boolean; following: any[] }> {
+    return this.http.get<{ success: boolean; following: any[] }>(`${this.apiUrl}/users/${userId}/following`);
   }
 }

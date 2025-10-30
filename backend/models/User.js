@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema({
     enum: ['young', 'old'], // Only two options allowed
     required: [true, 'Please select your generation'] // Must be selected during signup
   },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   isActive: {
     type: Boolean,
     default: true

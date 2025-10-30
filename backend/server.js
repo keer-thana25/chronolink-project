@@ -24,6 +24,7 @@ app.use(limiter);
 app.use(cors({
   origin: [
     'http://localhost:4200',
+    'http://localhost:4201',
     'http://localhost:5000',
     'https://chronolink-project.onrender.com',
     'https://chronolink-project-1.onrender.com'

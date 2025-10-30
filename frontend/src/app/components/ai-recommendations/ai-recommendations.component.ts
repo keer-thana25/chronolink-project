@@ -99,7 +99,8 @@ import { GSAPService } from '../../services/gsap.service';
                  class="post-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300">
               <!-- Post Image/Media -->
               <div class="post-media h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <div class="text-center">
+                <img *ngIf="post.imageUrl" [src]="post.imageUrl" [alt]="post.caption" class="w-full h-full object-cover">
+                <div *ngIf="!post.imageUrl" class="text-center">
                   <div class="w-16 h-16 bg-chronolink-primary rounded-full flex items-center justify-center mx-auto mb-3">
                     <span class="text-white text-xl font-medium">{{ post.createdBy === 'system' ? 'CL' : getInitials(post.author?.username) }}</span>
                   </div>
@@ -120,7 +121,7 @@ import { GSAPService } from '../../services/gsap.service';
                   </span>
                 </div>
 
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ post.title }}</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ post.caption || post.title }}</h3>
                 <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ post.content }}</p>
 
                 <div class="flex items-center justify-between">
@@ -131,10 +132,13 @@ import { GSAPService } from '../../services/gsap.service';
                     <span class="text-sm text-gray-700">{{ post.createdBy === 'system' ? 'ChronoLink' : post.author?.username }}</span>
                   </div>
                   <div class="flex items-center space-x-3 text-sm text-gray-500">
-                    <span class="flex items-center space-x-1">
-                      <i class="far fa-heart"></i>
+                    <button
+                      (click)="likePost(post.id)"
+                      class="flex items-center space-x-1 hover:text-red-500 transition-colors duration-200"
+                      [class.text-red-500]="isPostLiked(post)">
+                      <i class="fa-heart" [class.far]="!isPostLiked(post)" [class.fas]="isPostLiked(post)"></i>
                       <span>{{ post.likeCount || 0 }}</span>
-                    </span>
+                    </button>
                     <span class="flex items-center space-x-1">
                       <i class="far fa-eye"></i>
                       <span>{{ post.views || 0 }}</span>
@@ -283,6 +287,35 @@ export class AiRecommendationsComponent implements OnInit, OnDestroy {
       'History': 'scroll'
     };
     return icons[category] || 'circle';
+  }
+
+  likePost(postId: string): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth']);
+      return;
+    }
+
+    this.postsService.likePost(postId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            // Update the post's like count and liked status
+            const post = this.posts.find(p => p.id === postId);
+            if (post) {
+              post.likeCount = response.likes;
+              post.isLiked = response.isLiked;
+            }
+          }
+        },
+        error: (error: any) => {
+          console.error('Error liking post:', error);
+        }
+      });
+  }
+
+  isPostLiked(post: Post): boolean {
+    return post.isLiked || false;
   }
 
   trackByPostId(index: number, post: Post): string {

@@ -99,12 +99,20 @@ import { GSAPService } from '../../services/gsap.service';
                 <div class="flex items-center space-x-6">
                   <!-- Like Button -->
                   <button (click)="likePost()" class="flex items-center space-x-1 transition-colors duration-200 focus:outline-none">
-                    <i 
+                    <i
                       [ngClass]="{
                         'fas fa-heart text-2xl text-red-500': currentPost?.isLiked,
                         'far fa-heart text-2xl text-gray-600': !currentPost?.isLiked
                       }">
                     </i>
+                  </button>
+
+                  <!-- Follow Button (only show if not own post and user is authenticated) -->
+                  <button *ngIf="currentPost && currentPost.author && currentPost.author.id !== currentUser?.id && authService.isAuthenticated()"
+                          (click)="toggleFollow()"
+                          class="flex items-center space-x-1 transition-colors duration-200 focus:outline-none">
+                    <i class="fas fa-user-plus text-2xl text-blue-500"></i>
+                    <span class="text-sm font-medium">{{ isFollowing ? 'Following' : 'Follow' }}</span>
                   </button>
 
                   <button (click)="commentPost()" class="flex items-center space-x-1 text-gray-600 hover:text-blue-500 transition-colors duration-200">
@@ -160,6 +168,7 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
   currentIndex = 0;
   isLoading = false;
   currentUser: any = { username: 'Guest' };
+  isFollowing = false;
 
   private destroy$ = new Subject<void>();
   private touchStartX = 0;
@@ -169,11 +178,19 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
     private postsService: PostsService,
     private gsapService: GSAPService,
     private router: Router,
-    private authService: AuthService
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.loadGenerationPosts();
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+    });
+
+    // Listen for post creation events
+    window.addEventListener('postCreated', () => {
+      this.loadGenerationPosts();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -187,6 +204,7 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
 
   private loadGenerationPosts(): void {
     this.isLoading = true;
+    // Load all posts from all users for the connect page
     this.postsService.getGenerationConnection()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -240,12 +258,14 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
   nextPost(): void {
     this.currentIndex = (this.currentIndex + 1) % this.posts.length;
     this.currentPost = this.posts[this.currentIndex];
+    this.checkFollowStatus();
     this.animateCardSlide('left');
   }
 
   previousPost(): void {
     this.currentIndex = (this.currentIndex - 1 + this.posts.length) % this.posts.length;
     this.currentPost = this.posts[this.currentIndex];
+    this.checkFollowStatus();
     this.animateCardSlide('right');
   }
 
@@ -348,5 +368,51 @@ export class ConnectGenerationsComponent implements OnInit, OnDestroy, AfterView
     if (this.posts.length === 0) return;
     if (event.key === 'ArrowLeft') this.previousPost();
     else if (event.key === 'ArrowRight') this.nextPost();
+  }
+
+  toggleFollow(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth']);
+      return;
+    }
+
+    if (!this.currentPost || !this.currentPost.author) return;
+
+    const userId = this.currentPost.author.id;
+    const followObservable = this.isFollowing
+      ? this.authService.unfollowUser(userId)
+      : this.authService.followUser(userId);
+
+    followObservable
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.isFollowing = !this.isFollowing;
+            // Update follower/following counts if available
+            if (this.currentUser) {
+              if (this.isFollowing) {
+                this.currentUser.followingCount = (this.currentUser.followingCount || 0) + 1;
+              } else {
+                this.currentUser.followingCount = Math.max(0, (this.currentUser.followingCount || 0) - 1);
+              }
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Error toggling follow:', error);
+        }
+      });
+  }
+
+  private checkFollowStatus(): void {
+    if (!this.authService.isAuthenticated() || !this.currentPost || !this.currentPost.author) {
+      this.isFollowing = false;
+      return;
+    }
+
+    // Check if current user is following this post's author
+    // This is a simplified check - in a real app, you'd check against the user's following list
+    this.isFollowing = this.currentUser?.following?.includes(this.currentPost.author.id) || false;
   }
 }

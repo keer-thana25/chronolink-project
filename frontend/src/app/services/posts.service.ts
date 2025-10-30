@@ -135,12 +135,11 @@ export class PostsService {
   }
 
   getGenerationConnection(): Observable<{ success: boolean; posts: Post[] }> {
-    const isAuthenticated = this.authService.isAuthenticated();
-    const endpoint = isAuthenticated
-      ? `${this.apiUrl}/posts/generation-connection/me`
-      : `${this.apiUrl}/posts/generation-connection`;
-    console.log('PostsService: Fetching generation connection posts from:', endpoint, 'Is Authenticated:', isAuthenticated); // Debug log
-    return this.http.get<{ success: boolean; posts: Post[] }>(endpoint);
+    return this.http.get<{ success: boolean; posts: Post[] }>(`${this.apiUrl}/posts/generation-connection`);
+  }
+
+  getGenerationConnectionForUser(): Observable<{ success: boolean; posts: Post[] }> {
+    return this.http.get<{ success: boolean; posts: Post[] }>(`${this.apiUrl}/posts/generation-connection/me`);
   }
 
   getRecommendations(userId?: string, category?: string): Observable<{ success: boolean; posts: Post[]; basedOn: string }> {
@@ -153,5 +152,9 @@ export class PostsService {
     }
 
     return this.http.get<{ success: boolean; posts: Post[]; basedOn: string }>(`${this.apiUrl}/posts/recommendations`, { params });
+  }
+
+  getUserPosts(userId: string): Observable<{ success: boolean; posts: Post[] }> {
+    return this.http.get<{ success: boolean; posts: Post[] }>(`${this.apiUrl}/posts/user/${userId}`);
   }
 }

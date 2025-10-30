@@ -229,13 +229,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!this.currentUser?.id) return;
 
     this.isLoading = true;
-    this.postsService.getFeed()
+    this.postsService.getUserPosts(this.currentUser.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
           this.isLoading = false;
           if (response.success) {
             this.userPosts = response.posts;
+            this.userStats.posts = this.userPosts.length;
           }
         },
         error: (error: any) => {
