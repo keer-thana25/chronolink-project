@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run install-all && npm run build",
-  "startCommand": "npm run start-backend",
+  "startCommand": "cd backend && node server.js",
   "devCommand": "npm run dev",
   "installCommand": "npm run install-all",
   "framework": "node",
