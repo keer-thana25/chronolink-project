@@ -318,13 +318,12 @@ const getFeaturedPosts = async (req, res) => {
 // @access  Public
 const getGenerationConnection = async (req, res) => {
   try {
-    // Get all posts including user posts (limit to 20 for better performance)
+    // Get all posts including user posts (no limit for unlimited posts)
     const allPosts = await Post.find({
       isActive: true
     })
       .populate('author', 'username generation')
-      .sort({ createdAt: -1 })
-      .limit(20);
+      .sort({ createdAt: -1 });
 
     // Separate posts by generation
     const youngPosts = allPosts.filter(post => post.generation === 'young');
@@ -334,18 +333,9 @@ const getGenerationConnection = async (req, res) => {
     // Combine all posts, prioritizing user posts (Unknown generation)
     const alternatingPosts = [...unknownPosts, ...youngPosts, ...oldPosts];
 
-    // If we have fewer than 10 posts, fill with more from available generations
-    if (alternatingPosts.length < 10) {
-      const remainingPosts = allPosts.filter(post =>
-        !alternatingPosts.some(p => p._id.toString() === post._id.toString())
-      ).slice(0, 10 - alternatingPosts.length);
-
-      alternatingPosts.push(...remainingPosts);
-    }
-
     res.json({
       success: true,
-      posts: alternatingPosts.slice(0, 10) // Limit to 10 posts for display
+      posts: alternatingPosts // Return all posts without limit
     });
   } catch (error) {
     console.error(error);
@@ -361,7 +351,6 @@ const getGenerationConnectionForUser = async (req, res) => {
     const allPosts = await Post.find({ isActive: true })
       .populate('author', 'username generation')
       .sort({ createdAt: -1 })
-      .limit(20)
       .lean();
 
     const postsWithLikeStatus = allPosts.map(post => ({
@@ -378,7 +367,7 @@ const getGenerationConnectionForUser = async (req, res) => {
 
     res.json({
       success: true,
-      posts: alternatingPosts.slice(0, 10)
+      posts: alternatingPosts // Return all posts without limit
     });
   } catch (error) {
     console.error(error);
