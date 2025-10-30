@@ -4,14 +4,13 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "npx ng build --configuration production",
+    "build": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "dependencies": {
     "@angular/animations": "^20.0.0",
     "@angular/common": "^20.0.0",
-    "@angular/compiler": "^20.0.0",
     "@angular/core": "^20.0.0",
     "@angular/forms": "^20.0.0",
     "@angular/platform-browser": "^20.0.0",
