@@ -77,7 +77,7 @@ app.use('/api/users', require('./routes/users'));
 
 // ✅ Serve Angular frontend in production
 if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.resolve(__dirname, 'dist/chronolink-frontend');
+  const frontendPath = path.resolve(__dirname, '../frontend/dist/chronolink-frontend');
 
   // Serve static Angular files with proper MIME types for ES modules
   app.use(express.static(frontendPath, {
