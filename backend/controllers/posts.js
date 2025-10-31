@@ -289,7 +289,17 @@ const getGenerationConnectionForUser = async (req, res) => {
 // @access  Public
 const getRecommendations = async (req, res) => {
   try {
-    const posts = await Post.find({ isActive: true })
+    const { category } = req.query;
+
+    // Build query object
+    const query = { isActive: true };
+
+    // Add category filter if provided
+    if (category) {
+      query.category = category;
+    }
+
+    const posts = await Post.find(query)
       .populate('author', 'username profilePicture')
       .sort({ likes: -1, createdAt: -1 })
       .limit(20);
