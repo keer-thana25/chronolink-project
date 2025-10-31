@@ -1,8 +1,7 @@
 {
-  "buildCommand": "npm install --include=dev && cd backend && npm install --include=dev && cd ../frontend && npm install --include=dev && npm run build",
-  "startCommand": "cd backend && node server.js",
-  "devCommand": "npm run dev",
   "installCommand": "npm install --include=dev",
+  "buildCommand": "npm run postinstall",
+  "startCommand": "cd backend && node server.js",
   "framework": "node",
   "nodeVersion": "20",
   "regions": ["fra1"],
